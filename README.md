@@ -37,7 +37,7 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 
 ## 技术路线
 
-当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.1 阶段只完成项目立项和材料初始化，不创建复杂 Android 工程。
+当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.2 阶段已经创建可运行 Android/Kotlin 摘要 MVP，LiteRT 和云端 Agent 留到后续版本逐步接入。
 
 ## 目录结构说明
 
@@ -73,27 +73,53 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 - Gitee 主仓库已创建并完成首次推送。
 - GitHub 镜像仓库已创建并完成首次推送。
 - v0.1 标签已创建并推送到 Gitee 与 GitHub。
-- 项目管理平台、部分截图材料待补充。
+- V0.2 Android/Kotlin 摘要 MVP 已完成本地构建。
+- 已在 Pixel_8 Android 模拟器中安装并启动 V0.2 Demo。
+- 已生成首页和摘要结果页截图。
+- 已在 Leangoo 创建项目管理看板并录入阶段任务。
+- 已生成 Leangoo 项目首页、任务看板和任务分配截图。
 
 ## 后续计划
 
-- 创建 Gitee 主仓库和 GitHub 镜像仓库。
-- 建立在线项目管理看板并导入任务。
-- 创建 Android/Kotlin 可运行 Demo。
-- 实现文本输入、示例文本、本地摘要和关键词提取。
+- 完善 V0.2 边界测试记录，包括空文本和长文本输入。
+- 开始 V0.3 Agent 问答页面和知识卡片页面。
+- 后续接入历史记录和 LiteRT 端侧句子分析。
 - 根据真实测试结果补充 Bug 记录、截图和项目报告。
 
-## 运行说明占位
+## 运行说明
 
-当前阶段暂未创建 Android 工程。V0.2 阶段完成 Demo 后补充运行步骤、开发环境和 APK 安装说明。
+Android 工程位于：
 
-待补充。
+```text
+android\
+```
+
+构建命令：
+
+```powershell
+cd android
+.\gradlew.bat :app:assembleDebug
+```
+
+Debug APK 输出位置：
+
+```text
+android\app\build\outputs\apk\debug\app-debug.apk
+```
+
+课程演示用 APK 副本：
+
+```text
+release\SmartReadAgent-v0.2-debug.apk
+```
+
+说明：APK 文件按 `.gitignore` 规则不提交到 Git 仓库。
 
 ## 截图占位
 
-- App 首页截图：待补充。
+- App 首页截图：`首页_20260512.png`。
 - 文本导入页截图：待补充。
-- 摘要结果页截图：待补充。
+- 摘要结果页截图：`摘要结果页_20260512.png`。
 - Agent 问答页截图：待补充。
 - LiteRT 分析结果截图：待补充。
 
@@ -101,4 +127,5 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 
 | 版本 | 日期 | 内容 | 备注 |
 |---|---|---|---|
-| v0.1 | 2026-05-11 | 项目立项与目录初始化 | 当前阶段 |
+| v0.1 | 2026-05-11 | 项目立项与目录初始化 | 已完成 |
+| v0.2 | 2026-05-12 | 文本导入、示例文本、本地摘要、关键词提取和结果展示 | 已完成初版 |
