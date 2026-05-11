@@ -1,0 +1,30 @@
+# Android / Gradle
+.gradle/
+build/
+**/build/
+local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.keystore
+*.jks
+*.pem
+*.key
+.env
+api_keys.*
+
+# Model and temporary outputs
+model/data/raw/
+model/exports/*.tmp
+*.log
+
