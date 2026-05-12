@@ -1,12 +1,12 @@
 # SmartRead Agent Android 工程
 
-本目录为 SmartRead Agent V0.4 Android/Kotlin 工程。
+本目录为 SmartRead Agent V0.5 Android/Kotlin 工程。
 
-Android 工程已创建，当前版本 V0.4 已实现摘要 MVP、Agent 问答、知识卡片、复习题生成和 LiteRT 端侧句子重要性分析，可通过 Gradle Wrapper 构建 Debug APK。
+Android 工程已创建，当前版本 V0.5 已实现摘要 MVP、Agent 问答、知识卡片、复习题生成、LiteRT 端侧句子重要性分析和本地历史记录，可通过 Gradle Wrapper 构建 Debug APK。
 
 ## 当前实现
 
-V0.4 已完成一个可运行的 Jetpack Compose Demo，功能包括：
+V0.5 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 
 - 文本粘贴输入。
 - 3 条示例文本选择。
@@ -21,6 +21,9 @@ V0.4 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 - 3 道复习题和参考答案展示。
 - LiteRT 本地模型加载。
 - 文章句子重要性评分和来源展示。
+- 最近 12 条历史记录保存。
+- 从历史记录恢复原文并重新分析。
+- 清空历史记录。
 - 清空和重新分析。
 
 当前版本不接入云端 API，不写入任何 API Key。LiteRT 模型文件位于 `app/src/main/assets/sentence_importance_model.tflite`。
@@ -62,6 +65,7 @@ android\app\build\outputs\apk\debug\app-debug.apk
 release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
 release\SmartReadAgent-v0.4-debug.apk
+release\SmartReadAgent-v0.5-debug.apk
 ```
 
 `*.apk` 按 `.gitignore` 规则不提交到 Git 仓库。
@@ -80,6 +84,9 @@ release\SmartReadAgent-v0.4-debug.apk
 - 2026-05-12：V0.4 已将 `sentence_importance_model.tflite` 放入 Android assets。
 - 2026-05-12：V0.4 `:app:assembleDebug` 构建成功，APK 已复制到 `release\SmartReadAgent-v0.4-debug.apk`。
 - 2026-05-12：V0.4 APK 已安装到 `Pixel_8` 模拟器并启动，已保存 LiteRT 首页和端侧分析截图。
+- 2026-05-12：V0.5 已实现 SharedPreferences 历史记录保存和历史记录页。
+- 2026-05-12：V0.5 `:app:assembleDebug` 构建成功，APK 已复制到 `release\SmartReadAgent-v0.5-debug.apk`。
+- 2026-05-12：V0.5 APK 已安装到 `Pixel_8` 模拟器，已验证历史记录页和恢复历史分析流程。
 
 当前已验证功能：
 
@@ -96,8 +103,9 @@ release\SmartReadAgent-v0.4-debug.apk
 - 知识卡片。
 - 复习题生成。
 - LiteRT 端侧句子重要性评分。
+- 历史记录保存和恢复。
 - Debug APK 构建。
 
 ## 后续计划
 
-- V0.5：历史记录和体验优化。
+- 后续：补充真机体验测试、发布说明和最终提交材料。

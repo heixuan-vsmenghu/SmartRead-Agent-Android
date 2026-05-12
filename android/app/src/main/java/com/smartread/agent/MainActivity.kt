@@ -1,5 +1,6 @@
 package com.smartread.agent
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,6 +45,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.json.JSONArray
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +65,7 @@ private enum class Screen {
     Home,
     AgentChat,
     KnowledgeCards,
+    History,
 }
 
 data class ArticleAnalysis(
@@ -100,11 +108,110 @@ data class QuizQuestion(
     val referenceAnswer: String,
 )
 
+data class HistoryRecord(
+    val id: Long,
+    val title: String,
+    val preview: String,
+    val savedAt: Long,
+    val displayTime: String,
+    val originalText: String,
+    val oneSentenceSummary: String,
+    val keywords: List<String>,
+    val sentenceCount: Int,
+    val characterCount: Int,
+)
+
 private data class SentenceScore(
     val sentence: String,
     val score: Int,
     val index: Int,
 )
+
+object HistoryRepository {
+    private const val PREFS_NAME = "smartread_history"
+    private const val KEY_RECORDS = "records"
+    private const val MAX_RECORDS = 12
+    private val timeFormat = SimpleDateFormat("MM-dd HH:mm", Locale.CHINA).apply {
+        timeZone = TimeZone.getTimeZone("Asia/Shanghai")
+    }
+
+    fun load(context: Context): List<HistoryRecord> {
+        val raw = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_RECORDS, "[]")
+            .orEmpty()
+        return runCatching {
+            val array = JSONArray(raw)
+            List(array.length()) { index ->
+                array.getJSONObject(index).toHistoryRecord()
+            }
+        }.getOrElse { emptyList() }
+    }
+
+    fun save(context: Context, analysis: ArticleAnalysis): List<HistoryRecord> {
+        val existing = load(context)
+        val now = System.currentTimeMillis()
+        val record = HistoryRecord(
+            id = now,
+            title = analysis.oneSentenceSummary.take(28).ifBlank { "未命名阅读记录" },
+            preview = analysis.originalText.replace(Regex("\\s+"), " ").take(72),
+            savedAt = now,
+            displayTime = timeFormat.format(Date(now)),
+            originalText = analysis.originalText,
+            oneSentenceSummary = analysis.oneSentenceSummary,
+            keywords = analysis.keywords,
+            sentenceCount = analysis.sentenceCount,
+            characterCount = analysis.characterCount,
+        )
+        val next = (listOf(record) + existing.filter { it.originalText != analysis.originalText })
+            .take(MAX_RECORDS)
+        persist(context, next)
+        return next
+    }
+
+    fun clear(context: Context): List<HistoryRecord> {
+        persist(context, emptyList())
+        return emptyList()
+    }
+
+    private fun persist(context: Context, records: List<HistoryRecord>) {
+        val array = JSONArray()
+        records.forEach { array.put(it.toJson()) }
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_RECORDS, array.toString())
+            .apply()
+    }
+
+    private fun HistoryRecord.toJson(): JSONObject {
+        return JSONObject()
+            .put("id", id)
+            .put("title", title)
+            .put("preview", preview)
+            .put("savedAt", savedAt)
+            .put("displayTime", displayTime)
+            .put("originalText", originalText)
+            .put("oneSentenceSummary", oneSentenceSummary)
+            .put("keywords", JSONArray(keywords))
+            .put("sentenceCount", sentenceCount)
+            .put("characterCount", characterCount)
+    }
+
+    private fun JSONObject.toHistoryRecord(): HistoryRecord {
+        val keywordArray = optJSONArray("keywords") ?: JSONArray()
+        return HistoryRecord(
+            id = optLong("id"),
+            title = optString("title"),
+            preview = optString("preview"),
+            savedAt = optLong("savedAt"),
+            displayTime = optString("displayTime"),
+            originalText = optString("originalText"),
+            oneSentenceSummary = optString("oneSentenceSummary"),
+            keywords = List(keywordArray.length()) { index -> keywordArray.optString(index) },
+            sentenceCount = optInt("sentenceCount"),
+            characterCount = optInt("characterCount"),
+        )
+    }
+}
 
 private val SmartReadColors = lightColorScheme(
     primary = Color(0xFF1D4ED8),
@@ -466,6 +573,21 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
     var inputText by remember { mutableStateOf(SampleTexts.first()) }
     var analysis by remember { mutableStateOf(analyzeWithImportance(inputText)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var historyRecords by remember { mutableStateOf(HistoryRepository.load(appContext)) }
+
+    fun acceptAnalysis(result: ArticleAnalysis) {
+        analysis = result
+        historyRecords = HistoryRepository.save(appContext, result)
+        errorMessage = null
+    }
+
+    fun openHistoryRecord(record: HistoryRecord) {
+        inputText = record.originalText
+        val result = analyzeWithImportance(record.originalText)
+        analysis = result
+        errorMessage = null
+        currentScreen = Screen.Home
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -475,7 +597,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                     Column {
                         Text("SmartRead Agent", fontWeight = FontWeight.Bold)
                         Text(
-                            text = "V0.4 LiteRT 端侧分析",
+                            text = "V0.5 历史记录与体验优化",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B),
                         )
@@ -504,8 +626,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                 },
                 onUseSample = { index ->
                     inputText = SampleTexts[index]
-                    analysis = analyzeWithImportance(SampleTexts[index])
-                    errorMessage = null
+                    analyzeWithImportance(SampleTexts[index])?.let(::acceptAnalysis)
                 },
                 onAnalyze = {
                     val result = analyzeWithImportance(inputText)
@@ -513,8 +634,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                         analysis = null
                         errorMessage = "请先输入一段需要分析的文本。"
                     } else {
-                        analysis = result
-                        errorMessage = null
+                        acceptAnalysis(result)
                     }
                 },
                 onClear = {
@@ -524,6 +644,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                 },
                 onOpenAgent = { currentScreen = Screen.AgentChat },
                 onOpenCards = { currentScreen = Screen.KnowledgeCards },
+                onOpenHistory = { currentScreen = Screen.History },
                 modifier = contentModifier,
             )
 
@@ -536,6 +657,16 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
             Screen.KnowledgeCards -> KnowledgeCardsScreen(
                 analysis = analysis,
                 onBack = { currentScreen = Screen.Home },
+                modifier = contentModifier,
+            )
+
+            Screen.History -> HistoryScreen(
+                records = historyRecords,
+                onBack = { currentScreen = Screen.Home },
+                onOpenRecord = ::openHistoryRecord,
+                onClearHistory = {
+                    historyRecords = HistoryRepository.clear(appContext)
+                },
                 modifier = contentModifier,
             )
         }
@@ -553,6 +684,7 @@ private fun HomeScreen(
     onClear: () -> Unit,
     onOpenAgent: () -> Unit,
     onOpenCards: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -574,12 +706,14 @@ private fun HomeScreen(
             EmptyResultCard(
                 onOpenAgent = onOpenAgent,
                 onOpenCards = onOpenCards,
+                onOpenHistory = onOpenHistory,
             )
         } else {
             ResultSection(
                 result = analysis,
                 onOpenAgent = onOpenAgent,
                 onOpenCards = onOpenCards,
+                onOpenHistory = onOpenHistory,
             )
         }
     }
@@ -603,7 +737,7 @@ private fun IntroCard(modifier: Modifier = Modifier) {
                 color = Color(0xFF1E3A8A),
             )
             Text(
-                text = "当前版本支持文本摘要、关键词提取、Agent 问答、知识卡片、复习题生成和 LiteRT 端侧句子重要性评分。",
+                text = "当前版本支持文本摘要、关键词提取、Agent 问答、知识卡片、复习题生成、LiteRT 端侧评分和历史记录。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF334155),
             )
@@ -692,6 +826,7 @@ private fun ResultSection(
     result: ArticleAnalysis,
     onOpenAgent: () -> Unit,
     onOpenCards: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -716,6 +851,7 @@ private fun ResultSection(
         ResultActionCard(
             onOpenAgent = onOpenAgent,
             onOpenCards = onOpenCards,
+            onOpenHistory = onOpenHistory,
         )
     }
 }
@@ -794,6 +930,7 @@ private fun SentenceImportanceItem(
 private fun ResultActionCard(
     onOpenAgent: () -> Unit,
     onOpenCards: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -824,6 +961,13 @@ private fun ResultActionCard(
                 ) {
                     Text("生成知识卡片")
                 }
+            }
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onOpenHistory,
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text("查看历史记录")
             }
         }
     }
@@ -940,6 +1084,118 @@ private fun KnowledgeCardsScreen(
                 KnowledgeCardItem(card)
             }
             QuizSection(quizQuestions)
+        }
+    }
+}
+
+@Composable
+private fun HistoryScreen(
+    records: List<HistoryRecord>,
+    onBack: () -> Unit,
+    onOpenRecord: (HistoryRecord) -> Unit,
+    onClearHistory: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        PageHeader(
+            title = "历史记录",
+            subtitle = "最近 ${records.size} 条阅读分析",
+            onBack = onBack,
+        )
+        if (records.isEmpty()) {
+            FriendlyPromptCard("还没有历史记录。完成一次智能分析后，这里会保存最近的阅读结果。")
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                OutlinedButton(
+                    onClick = onClearHistory,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("清空历史")
+                }
+            }
+            records.forEach { record ->
+                HistoryRecordItem(
+                    record = record,
+                    onOpenRecord = onOpenRecord,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryRecordItem(
+    record: HistoryRecord,
+    onOpenRecord: (HistoryRecord) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = record.title,
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                TypeLabel(record.displayTime)
+            }
+            Text(record.oneSentenceSummary)
+            Text(
+                text = record.preview,
+                color = Color(0xFF64748B),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "关键词：${record.keywords.take(5).joinToString(" / ")}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFF475569),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                MetricCard(
+                    label = "字符数",
+                    value = record.characterCount.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+                MetricCard(
+                    label = "句子数",
+                    value = record.sentenceCount.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onOpenRecord(record) },
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text("恢复这次分析")
+            }
         }
     }
 }
@@ -1212,6 +1468,7 @@ private fun ResultCard(
 private fun EmptyResultCard(
     onOpenAgent: () -> Unit,
     onOpenCards: () -> Unit,
+    onOpenHistory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -1243,6 +1500,13 @@ private fun EmptyResultCard(
                 ) {
                     Text("知识卡片")
                 }
+            }
+            OutlinedButton(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onOpenHistory,
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text("查看历史记录")
             }
         }
     }

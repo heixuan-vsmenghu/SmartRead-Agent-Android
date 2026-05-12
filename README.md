@@ -88,10 +88,11 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 - 已生成 V0.3 App 截图并更新测试用例记录。
 - V0.4 已完成句子重要性训练脚本、Notebook 和真实 `.tflite` 模型导出。
 - V0.4 已将 `sentence_importance_model.tflite` 集成到 Android assets，并在摘要结果页展示 LiteRT 端侧分析结果。
+- V0.5 已实现本地历史记录保存、历史记录页、恢复历史分析和清空历史功能。
 
 ## 后续计划
 
-- 后续接入历史记录和体验优化。
+- 后续补充真机体验测试、最终发布说明和提交材料。
 - 根据真实测试结果补充 Bug 记录、截图和项目报告。
 
 ## 运行说明
@@ -121,6 +122,7 @@ android\app\build\outputs\apk\debug\app-debug.apk
 release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
 release\SmartReadAgent-v0.4-debug.apk
+release\SmartReadAgent-v0.5-debug.apk
 ```
 
 完整路径：
@@ -129,6 +131,7 @@ release\SmartReadAgent-v0.4-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.2-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.3-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.4-debug.apk
+H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.5-debug.apk
 ```
 
 说明：APK 文件按 `.gitignore` 规则不提交到 Git 仓库。
@@ -154,6 +157,8 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 - LiteRT 句子重要性结果截图：`LiteRT句子重要性结果_20260512.png`。
 - V0.4 Agent 功能回归截图：`V0.4_Agent功能回归_20260512.png`。
 - V0.4 知识卡片功能回归截图：`V0.4知识卡片功能回归_20260512.png`。
+- V0.5 历史记录页截图：`V0.5历史记录页_20260512.png`。
+- V0.5 历史记录恢复截图：`V0.5历史记录恢复_20260512.png`。
 
 ## 版本记录占位
 
@@ -163,3 +168,4 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 | v0.2 | 2026-05-12 | 文本导入、示例文本、本地摘要、关键词提取、分点摘要、APK 构建和边界测试 | 已完成验收归档 |
 | v0.3 | 2026-05-12 | Agent 问答、知识卡片、复习题生成、APK 构建和模拟器测试 | 已完成 |
 | v0.4 | 2026-05-12 | LiteRT 端侧句子重要性模型、Android assets 集成、APK 构建和模拟器截图验证 | 已完成 |
+| v0.5 | 2026-05-12 | 本地历史记录、历史页、恢复历史分析、APK 构建和模拟器截图验证 | 已完成初步验证 |
