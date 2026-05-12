@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学生阅读教材、文章、课堂资料时“信息量大、理解成本高、复习整理耗时”的问题，提供文本导入、自动摘要、关键词提取、知识卡片、Agent 问答和历史记录等功能。项目后期计划集成 LiteRT 端侧模型，对文本句子进行重要性分析或类型分类，提升移动端 AI 实践完整度。
+SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学生阅读教材、文章、课堂资料时“信息量大、理解成本高、复习整理耗时”的问题，提供文本导入、自动摘要、关键词提取、知识卡片、Agent 问答、LiteRT 端侧句子分析和历史记录等功能。
 
 ## 双课程交付关系
 
@@ -19,7 +19,7 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 
 - 完成一个可演示的 Android/Kotlin 阅读辅助 App。
 - 实现文本输入、示例文本、本地摘要、关键词提取和结果展示等 MVP 功能。
-- 后续逐步加入 Agent 问答、知识卡片、复习题、历史记录和 LiteRT 端侧分析能力。
+- 持续完善 Agent 问答、知识卡片、复习题、历史记录和 LiteRT 端侧分析能力。
 - 保留完整的项目管理证据链，便于课程提交和期末展示。
 
 ## 核心功能
@@ -33,16 +33,16 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 - Agent 问答：围绕导入文本进行问答。
 - 复习题生成：根据文本生成简单复习题。
 - 历史记录：保存用户分析过的内容和结果。
-- LiteRT 端侧句子分析：后续用于句子重要性或句子类型分类。
+- LiteRT 端侧句子分析：对文章前 5 句进行本地句子重要性评分。
 
 ## 技术路线
 
-当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + 本地规则型 Agent + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.3 阶段已经实现本地 Agent 问答、知识卡片和复习题生成，LiteRT 和云端 Agent 留到后续版本逐步接入。
+当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + 本地规则型 Agent + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.4 阶段已完成轻量句子重要性模型训练、`.tflite` 导出、Android assets 集成和摘要结果页展示。
 
 ## 目录结构说明
 
-- `android/`：Android/Kotlin 工程，V0.3 已实现摘要 MVP、Agent 问答、知识卡片和复习题生成。
-- `model/`：后续放置模型训练 Notebook、数据和导出的 LiteRT 模型。
+- `android/`：Android/Kotlin 工程，V0.4 已实现摘要 MVP、Agent 问答、知识卡片、复习题和 LiteRT 端侧分析。
+- `model/`：模型训练脚本、Notebook、导出的 LiteRT 模型和标签文件。
 - `docs/`：项目需求、技术方案、阶段计划、演示和课程说明文档。
 - `docs/project-management/`：项目管理公共材料，可同步用于《软件项目管理》课程。
 - `screenshots/`：后续保存 App、模型、仓库和项目管理截图。
@@ -86,10 +86,11 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 - V0.3 `clean assembleDebug` 构建通过，已生成 `SmartReadAgent-v0.3-debug.apk`。
 - 已在 Pixel_8 Android 模拟器中完成 V0.3 入口、快捷问题、手动提问、空问题提示、知识卡片和复习题验证。
 - 已生成 V0.3 App 截图并更新测试用例记录。
+- V0.4 已完成句子重要性训练脚本、Notebook 和真实 `.tflite` 模型导出。
+- V0.4 已将 `sentence_importance_model.tflite` 集成到 Android assets，并在摘要结果页展示 LiteRT 端侧分析结果。
 
 ## 后续计划
 
-- 准备 V0.4 LiteRT 端侧句子分析模型方案。
 - 后续接入历史记录和体验优化。
 - 根据真实测试结果补充 Bug 记录、截图和项目报告。
 
@@ -119,6 +120,7 @@ android\app\build\outputs\apk\debug\app-debug.apk
 ```text
 release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
+release\SmartReadAgent-v0.4-debug.apk
 ```
 
 完整路径：
@@ -126,6 +128,7 @@ release\SmartReadAgent-v0.3-debug.apk
 ```text
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.2-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.3-debug.apk
+H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.4-debug.apk
 ```
 
 说明：APK 文件按 `.gitignore` 规则不提交到 Git 仓库。
@@ -145,7 +148,12 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 - Agent 空问题提示截图：`Agent空问题提示_20260512.png`。
 - 知识卡片页截图：`知识卡片页_20260512.png`。
 - 复习题展示截图：`复习题展示_20260512.png`。
-- LiteRT 分析结果截图：待补充。
+- LiteRT 首页启动截图：`LiteRT首页启动_20260512.png`。
+- LiteRT 分析结果截图：`LiteRT端侧分析_20260512.png`。
+- V0.4 摘要结果页截图：`V0.4摘要结果页_20260512.png`。
+- LiteRT 句子重要性结果截图：`LiteRT句子重要性结果_20260512.png`。
+- V0.4 Agent 功能回归截图：`V0.4_Agent功能回归_20260512.png`。
+- V0.4 知识卡片功能回归截图：`V0.4知识卡片功能回归_20260512.png`。
 
 ## 版本记录占位
 
@@ -154,3 +162,4 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 | v0.1 | 2026-05-11 | 项目立项与目录初始化 | 已完成 |
 | v0.2 | 2026-05-12 | 文本导入、示例文本、本地摘要、关键词提取、分点摘要、APK 构建和边界测试 | 已完成验收归档 |
 | v0.3 | 2026-05-12 | Agent 问答、知识卡片、复习题生成、APK 构建和模拟器测试 | 已完成 |
+| v0.4 | 2026-05-12 | LiteRT 端侧句子重要性模型、Android assets 集成、APK 构建和模拟器截图验证 | 已完成 |

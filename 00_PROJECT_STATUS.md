@@ -2,7 +2,7 @@
 
 ## 当前版本
 
-v0.3 Agent 问答与知识卡片。
+v0.4 LiteRT 端侧句子分析。
 
 ## 当前日期
 
@@ -18,6 +18,7 @@ v0.3 Agent 问答与知识卡片。
 - `main`：稳定版本分支，V0.3 验证通过后合并。
 - `dev`：日常开发分支，V0.3 验证通过后合并。
 - `feature/agent-cards`：V0.3 Agent 问答与知识卡片功能分支。
+- `feature/litert-sentence-model`：V0.4 LiteRT 端侧句子分析功能分支。
 
 ## 最近一次提交
 
@@ -31,7 +32,7 @@ v0.3 Agent 问答与知识卡片。
 
 ## 当前阶段状态
 
-V0.1 已完成，V0.2 摘要 MVP 已完成验收归档，V0.3 Agent 问答与知识卡片功能已完成代码开发和模拟器初步验证。
+V0.1 已完成，V0.2 摘要 MVP 已完成验收归档，V0.3 Agent 问答与知识卡片功能已完成代码开发和模拟器初步验证。V0.4 LiteRT 端侧句子分析集成已完成构建和模拟器初步验证。
 
 已完成内容：
 
@@ -67,16 +68,25 @@ V0.1 已完成，V0.2 摘要 MVP 已完成验收归档，V0.3 Agent 问答与知
 - APK 路径：`H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.3-debug.apk`。
 - 已在 Pixel_8 Android 模拟器中完成 TC-007 至 TC-014 初步验证。
 - V0.3 App 截图已生成并归档到软件项目管理材料目录。
+- V0.4 已完成 `model/train_sentence_importance_model.py` 训练脚本。
+- V0.4 已完成 `model/notebooks/train_sentence_importance_model.ipynb` 模型说明 Notebook。
+- V0.4 已导出真实 `model/exports/sentence_importance_model.tflite` 模型文件。
+- V0.4 已将模型复制到 `android/app/src/main/assets/sentence_importance_model.tflite`。
+- V0.4 已新增 `SentenceImportanceClassifier.kt` 并接入摘要结果页。
+- V0.4 `:app:assembleDebug` 构建成功。
+- V0.4 APK 已复制到 `release\SmartReadAgent-v0.4-debug.apk`。
+- V0.4 APK 已安装到 Pixel_8 模拟器并启动。
+- V0.4 LiteRT 端侧分析截图已生成：`LiteRT端侧分析_20260512.png`。
 
 ## 下一阶段目标
 
-V0.4 LiteRT 端侧模型准备。
+V0.5 历史记录与体验优化。
 
 下一步优先完成：
 
-- 明确 LiteRT 端侧句子分析模型的任务类型。
-- 准备轻量文本数据集和 Notebook。
-- 设计端侧模型导出与 Android 集成方案。
+- 设计本地历史记录数据结构。
+- 完成历史记录列表和详情入口。
+- 补充 V0.5 测试记录和截图。
 - 继续补充真实测试记录和 App 运行截图。
 
 ## 待补充
@@ -88,5 +98,5 @@ V0.4 LiteRT 端侧模型准备。
 - 小组成员真实姓名和学号：待补充。
 - Agent 问答截图：已生成。
 - 知识卡片截图：已生成。
-- LiteRT 分析截图：待补充。
+- LiteRT 分析截图：已生成。
 - v1.0 APK 发布文件：待补充。

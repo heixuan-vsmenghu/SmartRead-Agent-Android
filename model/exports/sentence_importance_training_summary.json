@@ -1,0 +1,24 @@
+{
+  "project": "SmartRead Agent",
+  "version": "v0.4",
+  "note": "NumPy weak-supervision training was used because TensorFlow is not available in this local Python environment.",
+  "features": [
+    "sentenceLengthNorm",
+    "keywordOverlapScore",
+    "positionScore",
+    "punctuationScore",
+    "summaryCueScore"
+  ],
+  "architecture": "Input(5) -> Dense(8, relu) -> Dense(4, relu) -> Dense(1, sigmoid)",
+  "loss": 0.6157839894294739,
+  "weak_label_accuracy": 0.9260416666666667,
+  "sample_features": [
+    0.62,
+    0.7,
+    0.85,
+    0.35,
+    0.8
+  ],
+  "sample_score": 0.3315525949001312,
+  "output_model": "H:\\福建师范大学\\大三下\\软件实践研发（3）\\期末大作业_SmartReadAgent\\model\\exports\\sentence_importance_model.tflite"
+}

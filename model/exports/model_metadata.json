@@ -1,0 +1,24 @@
+{
+  "model_name": "sentence_importance_model",
+  "version": "v0.4",
+  "input_shape": [
+    1,
+    5
+  ],
+  "output_shape": [
+    1,
+    1
+  ],
+  "features": [
+    "sentenceLengthNorm",
+    "keywordOverlapScore",
+    "positionScore",
+    "punctuationScore",
+    "summaryCueScore"
+  ],
+  "output": "sentence importance score from 0.0 to 1.0",
+  "android_asset_path": "app/src/main/assets/sentence_importance_model.tflite",
+  "note": "Lightweight model for course project demo. It is used for on-device sentence importance analysis.",
+  "file_size_bytes": 1496,
+  "sha256": "11462553e040257c11677bc7824021440761922ff4a8b3ced2bb7d21904b9dde"
+}

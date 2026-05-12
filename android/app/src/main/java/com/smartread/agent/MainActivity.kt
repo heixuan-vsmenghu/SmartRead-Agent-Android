@@ -31,6 +31,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,6 +67,16 @@ data class ArticleAnalysis(
     val bulletSummaries: List<String>,
     val sentenceCount: Int,
     val characterCount: Int,
+    val sentenceImportances: List<SentenceImportance> = emptyList(),
+    val localModelStatus: String = "未运行",
+)
+
+data class SentenceImportance(
+    val sentence: String,
+    val score: Float,
+    val level: String,
+    val source: String,
+    val index: Int,
 )
 
 data class ChatMessage(
@@ -226,6 +238,79 @@ object TextAnalyzer {
     }
 }
 
+object SentenceImportanceAnalyzer {
+    private val sentenceRegex = Regex("[^。！？!?；;\\n]+[。！？!?；;]?")
+    private val cueWords = listOf("因此", "总之", "主要", "核心", "说明", "体现", "可以看出", "关键", "重点")
+    private val punctuationHints = listOf("：", ":", "；", ";")
+
+    fun attachImportance(
+        analysis: ArticleAnalysis,
+        classifier: SentenceImportanceClassifier,
+    ): ArticleAnalysis {
+        val sentences = splitSentences(analysis.originalText)
+        val importances = sentences.take(5).mapIndexed { index, sentence ->
+            val features = extractSentenceFeatures(
+                sentence = sentence,
+                index = index,
+                total = sentences.size,
+                keywords = analysis.keywords,
+            )
+            val result = classifier.classify(features)
+            SentenceImportance(
+                sentence = sentence,
+                score = result.score,
+                level = result.level,
+                source = result.source,
+                index = index,
+            )
+        }
+        val usingModel = importances.any { it.source == "LiteRT 本地模型" }
+        val status = if (usingModel) {
+            "推理方式：LiteRT 本地模型"
+        } else if (classifier.isModelLoaded) {
+            "模型已加载，但本次推理失败，已使用规则评分兜底。"
+        } else {
+            "当前使用规则评分兜底，模型文件未成功加载。"
+        }
+        return analysis.copy(
+            sentenceImportances = importances,
+            localModelStatus = status,
+        )
+    }
+
+    private fun splitSentences(text: String): List<String> {
+        return sentenceRegex.findAll(text)
+            .map { it.value.replace(Regex("\\s+"), " ").trim().trim('。', '！', '？', '!', '?', ';', '；') }
+            .filter { it.length >= 4 }
+            .toList()
+            .ifEmpty { listOf(text.trim().take(120)) }
+    }
+
+    fun extractSentenceFeatures(
+        sentence: String,
+        index: Int,
+        total: Int,
+        keywords: List<String>,
+    ): FloatArray {
+        val lengthNorm = (sentence.length / 90f).coerceIn(0f, 1f)
+        val keywordBase = keywords.take(8).ifEmpty { listOf("文本") }
+        val keywordHits = keywordBase.count { sentence.contains(it, ignoreCase = true) }
+        val keywordOverlap = (keywordHits / keywordBase.size.toFloat()).coerceIn(0f, 1f)
+        val positionScore = if (total <= 1) {
+            1f
+        } else {
+            (1f - index / (total - 1).toFloat() * 0.65f).coerceIn(0.35f, 1f)
+        }
+        val punctuationScore = when {
+            punctuationHints.any { sentence.contains(it) } -> 1f
+            sentence.contains("，") || sentence.contains(",") -> 0.35f
+            else -> 0.1f
+        }
+        val cueScore = if (cueWords.any { sentence.contains(it) }) 1f else 0f
+        return floatArrayOf(lengthNorm, keywordOverlap, positionScore, punctuationScore, cueScore)
+    }
+}
+
 object LocalReadingAgent {
     fun answerQuestion(question: String, analysis: ArticleAnalysis?): String {
         val cleanedQuestion = question.trim()
@@ -344,6 +429,15 @@ object LocalReadingAgent {
     }
 }
 
+fun extractSentenceFeatures(
+    sentence: String,
+    index: Int,
+    total: Int,
+    keywords: List<String>,
+): FloatArray {
+    return SentenceImportanceAnalyzer.extractSentenceFeatures(sentence, index, total, keywords)
+}
+
 @Composable
 fun SmartReadAgentApp(modifier: Modifier = Modifier) {
     MaterialTheme(colorScheme = SmartReadColors) {
@@ -356,9 +450,21 @@ fun SmartReadAgentApp(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SmartReadScaffold(modifier: Modifier = Modifier) {
+    val appContext = LocalContext.current.applicationContext
+    val classifier = remember { SentenceImportanceClassifier(appContext) }
+    DisposableEffect(classifier) {
+        onDispose { classifier.close() }
+    }
+
+    fun analyzeWithImportance(text: String): ArticleAnalysis? {
+        return TextAnalyzer.analyze(text)?.let { result ->
+            SentenceImportanceAnalyzer.attachImportance(result, classifier)
+        }
+    }
+
     var currentScreen by remember { mutableStateOf(Screen.Home) }
     var inputText by remember { mutableStateOf(SampleTexts.first()) }
-    var analysis by remember { mutableStateOf(TextAnalyzer.analyze(inputText)) }
+    var analysis by remember { mutableStateOf(analyzeWithImportance(inputText)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -369,7 +475,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                     Column {
                         Text("SmartRead Agent", fontWeight = FontWeight.Bold)
                         Text(
-                            text = "V0.3 Agent 问答与知识卡片",
+                            text = "V0.4 LiteRT 端侧分析",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B),
                         )
@@ -398,11 +504,11 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                 },
                 onUseSample = { index ->
                     inputText = SampleTexts[index]
-                    analysis = TextAnalyzer.analyze(SampleTexts[index])
+                    analysis = analyzeWithImportance(SampleTexts[index])
                     errorMessage = null
                 },
                 onAnalyze = {
-                    val result = TextAnalyzer.analyze(inputText)
+                    val result = analyzeWithImportance(inputText)
                     if (result == null) {
                         analysis = null
                         errorMessage = "请先输入一段需要分析的文本。"
@@ -497,7 +603,7 @@ private fun IntroCard(modifier: Modifier = Modifier) {
                 color = Color(0xFF1E3A8A),
             )
             Text(
-                text = "当前版本支持文本摘要、关键词提取、Agent 问答、知识卡片和复习题生成。LiteRT 端侧模型留到 V0.4 接入。",
+                text = "当前版本支持文本摘要、关键词提取、Agent 问答、知识卡片、复习题生成和 LiteRT 端侧句子重要性评分。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF334155),
             )
@@ -606,9 +712,80 @@ private fun ResultSection(
                 }
             }
         }
+        LiteRtAnalysisCard(result)
         ResultActionCard(
             onOpenAgent = onOpenAgent,
             onOpenCards = onOpenCards,
+        )
+    }
+}
+
+@Composable
+private fun LiteRtAnalysisCard(
+    result: ArticleAnalysis,
+    modifier: Modifier = Modifier,
+) {
+    ResultCard(title = "LiteRT 端侧分析", modifier = modifier) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+                text = result.localModelStatus,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (result.localModelStatus.contains("LiteRT")) {
+                    Color(0xFF166534)
+                } else {
+                    Color(0xFF9A3412)
+                },
+                fontWeight = FontWeight.Bold,
+            )
+            if (result.sentenceImportances.isEmpty()) {
+                Text("暂无可分析句子。")
+            } else {
+                result.sentenceImportances.forEach { item ->
+                    SentenceImportanceItem(item)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SentenceImportanceItem(
+    item: SentenceImportance,
+    modifier: Modifier = Modifier,
+) {
+    val percent = (item.score * 100f).toInt().coerceIn(0, 100)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(Color(0xFFF0FDF4), RoundedCornerShape(8.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "第 ${item.index + 1} 句",
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF166534),
+            )
+            Text(
+                text = "${item.level} · $percent%",
+                fontWeight = FontWeight.Bold,
+                color = when (item.level) {
+                    "高" -> Color(0xFFB91C1C)
+                    "中" -> Color(0xFFB45309)
+                    else -> Color(0xFF047857)
+                },
+            )
+        }
+        Text(item.sentence)
+        Text(
+            text = "来源：${item.source}",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF64748B),
         )
     }
 }

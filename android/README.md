@@ -1,12 +1,12 @@
 # SmartRead Agent Android 工程
 
-本目录为 SmartRead Agent V0.3 Android/Kotlin 工程。
+本目录为 SmartRead Agent V0.4 Android/Kotlin 工程。
 
-Android 工程已创建，当前版本 V0.3 已实现摘要 MVP、Agent 问答、知识卡片和复习题生成，可通过 Gradle Wrapper 构建 Debug APK。
+Android 工程已创建，当前版本 V0.4 已实现摘要 MVP、Agent 问答、知识卡片、复习题生成和 LiteRT 端侧句子重要性分析，可通过 Gradle Wrapper 构建 Debug APK。
 
 ## 当前实现
 
-V0.3 已完成一个可运行的 Jetpack Compose Demo，功能包括：
+V0.4 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 
 - 文本粘贴输入。
 - 3 条示例文本选择。
@@ -19,9 +19,11 @@ V0.3 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 - 本地规则型 Agent 回答。
 - 知识卡片展示。
 - 3 道复习题和参考答案展示。
+- LiteRT 本地模型加载。
+- 文章句子重要性评分和来源展示。
 - 清空和重新分析。
 
-当前版本不接入云端 API，不写入任何 API Key，也不集成 LiteRT。LiteRT 端侧模型计划留到 V0.4。
+当前版本不接入云端 API，不写入任何 API Key。LiteRT 模型文件位于 `app/src/main/assets/sentence_importance_model.tflite`。
 
 ## 技术栈
 
@@ -32,6 +34,7 @@ V0.3 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 - Material 3
 - 本地文本处理算法
 - 本地规则型 Agent
+- TensorFlow Lite / LiteRT 端侧推理
 
 ## 运行方式
 
@@ -58,6 +61,7 @@ android\app\build\outputs\apk\debug\app-debug.apk
 ```text
 release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
+release\SmartReadAgent-v0.4-debug.apk
 ```
 
 `*.apk` 按 `.gitignore` 规则不提交到 Git 仓库。
@@ -72,6 +76,10 @@ release\SmartReadAgent-v0.3-debug.apk
 - 2026-05-12：V0.3 `clean assembleDebug` 构建成功。
 - 2026-05-12：V0.3 APK 已复制到 `release\SmartReadAgent-v0.3-debug.apk`。
 - 2026-05-12：已在 `Pixel_8` Android 模拟器中验证 Agent 问答页、快捷问题、手动提问、空问题提示、知识卡片页和复习题展示。
+- 2026-05-12：V0.4 已加入 `org.tensorflow:tensorflow-lite:2.16.1` 依赖。
+- 2026-05-12：V0.4 已将 `sentence_importance_model.tflite` 放入 Android assets。
+- 2026-05-12：V0.4 `:app:assembleDebug` 构建成功，APK 已复制到 `release\SmartReadAgent-v0.4-debug.apk`。
+- 2026-05-12：V0.4 APK 已安装到 `Pixel_8` 模拟器并启动，已保存 LiteRT 首页和端侧分析截图。
 
 当前已验证功能：
 
@@ -87,9 +95,9 @@ release\SmartReadAgent-v0.3-debug.apk
 - 手动问题输入。
 - 知识卡片。
 - 复习题生成。
+- LiteRT 端侧句子重要性评分。
 - Debug APK 构建。
 
 ## 后续计划
 
-- V0.4：LiteRT 端侧句子分析模型集成。
 - V0.5：历史记录和体验优化。
