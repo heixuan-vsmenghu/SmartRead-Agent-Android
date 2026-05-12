@@ -37,11 +37,11 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 
 ## 技术路线
 
-当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.2 阶段已经创建可运行 Android/Kotlin 摘要 MVP，LiteRT 和云端 Agent 留到后续版本逐步接入。
+当前技术路线为 Android/Kotlin + Jetpack Compose + 本地文本处理算法 + 本地规则型 Agent + LiteRT 端侧模型 + 可选云端 Agent 增强。V0.3 阶段已经实现本地 Agent 问答、知识卡片和复习题生成，LiteRT 和云端 Agent 留到后续版本逐步接入。
 
 ## 目录结构说明
 
-- `android/`：Android/Kotlin 工程，V0.2 已创建并可构建运行。
+- `android/`：Android/Kotlin 工程，V0.3 已实现摘要 MVP、Agent 问答、知识卡片和复习题生成。
 - `model/`：后续放置模型训练 Notebook、数据和导出的 LiteRT 模型。
 - `docs/`：项目需求、技术方案、阶段计划、演示和课程说明文档。
 - `docs/project-management/`：项目管理公共材料，可同步用于《软件项目管理》课程。
@@ -81,12 +81,16 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 - 已生成 Leangoo 项目首页、任务看板和任务分配截图。
 - 已完成 Leangoo V0.2 任务状态更新，并保存状态更新截图。
 - 已补充 QQ V0.2 测试反馈截图索引。
-- V0.2 阶段验收归档已完成，V0.3 Agent 问答与知识卡片进入设计准备。
+- V0.2 阶段验收归档已完成。
+- V0.3 Agent 问答页、知识卡片页和复习题生成功能已实现。
+- V0.3 `clean assembleDebug` 构建通过，已生成 `SmartReadAgent-v0.3-debug.apk`。
+- 已在 Pixel_8 Android 模拟器中完成 V0.3 入口、快捷问题、手动提问、空问题提示、知识卡片和复习题验证。
+- 已生成 V0.3 App 截图并更新测试用例记录。
 
 ## 后续计划
 
-- 根据 V0.3 设计文档开发 Agent 问答页面和知识卡片页面。
-- 后续接入历史记录和 LiteRT 端侧句子分析。
+- 准备 V0.4 LiteRT 端侧句子分析模型方案。
+- 后续接入历史记录和体验优化。
 - 根据真实测试结果补充 Bug 记录、截图和项目报告。
 
 ## 运行说明
@@ -114,12 +118,14 @@ android\app\build\outputs\apk\debug\app-debug.apk
 
 ```text
 release\SmartReadAgent-v0.2-debug.apk
+release\SmartReadAgent-v0.3-debug.apk
 ```
 
 完整路径：
 
 ```text
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.2-debug.apk
+H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.3-debug.apk
 ```
 
 说明：APK 文件按 `.gitignore` 规则不提交到 Git 仓库。
@@ -132,7 +138,13 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 - 长文本输入截图：`长文本输入_20260512.png`。
 - 长文本摘要结果截图：`长文本摘要结果_20260512.png`。
 - 长文本摘要详情截图：`长文本摘要详情_20260512.png`。
-- Agent 问答页截图：待补充。
+- 摘要页入口按钮截图：`摘要页入口按钮_20260512.png`。
+- Agent 问答页截图：`Agent问答页_20260512.png`。
+- Agent 快捷问题截图：`Agent快捷问题_20260512.png`。
+- Agent 手动提问截图：`Agent手动提问_20260512.png`。
+- Agent 空问题提示截图：`Agent空问题提示_20260512.png`。
+- 知识卡片页截图：`知识卡片页_20260512.png`。
+- 复习题展示截图：`复习题展示_20260512.png`。
 - LiteRT 分析结果截图：待补充。
 
 ## 版本记录占位
@@ -141,4 +153,4 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 |---|---|---|---|
 | v0.1 | 2026-05-11 | 项目立项与目录初始化 | 已完成 |
 | v0.2 | 2026-05-12 | 文本导入、示例文本、本地摘要、关键词提取、分点摘要、APK 构建和边界测试 | 已完成验收归档 |
-| v0.3 | 待补充 | Agent 问答与知识卡片 | 已完成设计准备 |
+| v0.3 | 2026-05-12 | Agent 问答、知识卡片、复习题生成、APK 构建和模拟器测试 | 已完成 |

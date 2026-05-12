@@ -8,10 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -54,12 +52,40 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class AnalysisResult(
+private enum class Screen {
+    Home,
+    AgentChat,
+    KnowledgeCards,
+}
+
+data class ArticleAnalysis(
+    val originalText: String,
     val oneSentenceSummary: String,
     val keywords: List<String>,
-    val bulletSummary: List<String>,
+    val bulletSummaries: List<String>,
     val sentenceCount: Int,
     val characterCount: Int,
+)
+
+data class ChatMessage(
+    val role: MessageRole,
+    val content: String,
+)
+
+enum class MessageRole {
+    USER,
+    AGENT,
+}
+
+data class KnowledgeCard(
+    val title: String,
+    val type: String,
+    val content: String,
+)
+
+data class QuizQuestion(
+    val question: String,
+    val referenceAnswer: String,
 )
 
 private data class SentenceScore(
@@ -83,6 +109,14 @@ private val SampleTexts = listOf(
     "Jetpack Compose 是 Android 的现代声明式 UI 工具包。开发者可以用 Kotlin 描述界面状态，当状态变化时界面会自动重组。它适合构建输入、摘要结果、列表和卡片等页面，也便于在课程项目中快速完成可演示的移动端原型。",
 )
 
+private val QuickQuestions = listOf(
+    "这篇文章主要讲了什么？",
+    "提取这篇文章的核心关键词。",
+    "帮我整理复习重点。",
+    "根据文章生成 3 道复习题。",
+    "生成知识卡片。",
+)
+
 object TextAnalyzer {
     private val sentenceRegex = Regex("[^。！？!?；;\\n]+[。！？!?；;]?")
     private val englishTokenRegex = Regex("[A-Za-z][A-Za-z0-9+.#-]{1,}")
@@ -96,7 +130,7 @@ object TextAnalyzer {
         "项目", "功能", "能力", "阶段", "当前", "完成", "实现", "提供",
     )
 
-    fun analyze(rawText: String): AnalysisResult? {
+    fun analyze(rawText: String): ArticleAnalysis? {
         val text = rawText.trim()
         if (text.isBlank()) return null
 
@@ -135,10 +169,11 @@ object TextAnalyzer {
             .map { normalizeSentence(it.sentence) }
             .ifEmpty { listOf(normalizeSentence(bestSentence)) }
 
-        return AnalysisResult(
+        return ArticleAnalysis(
+            originalText = text,
             oneSentenceSummary = normalizeSentence(bestSentence, maxLength = 86),
             keywords = keywords,
-            bulletSummary = bullets,
+            bulletSummaries = bullets,
             sentenceCount = sentences.size,
             characterCount = text.length,
         )
@@ -191,20 +226,139 @@ object TextAnalyzer {
     }
 }
 
+object LocalReadingAgent {
+    fun answerQuestion(question: String, analysis: ArticleAnalysis?): String {
+        val cleanedQuestion = question.trim()
+        if (analysis == null) {
+            return "请先输入文章并完成摘要分析，再使用 Agent 问答功能。"
+        }
+        if (cleanedQuestion.isBlank()) {
+            return "请输入一个想围绕文章提问的问题。"
+        }
+
+        val bullets = analysis.bulletSummaries.toNumberedText()
+        val keywords = analysis.keywords.joinToString("、")
+
+        return when {
+            cleanedQuestion.containsAny("讲了什么", "主要内容", "总结", "概括") -> {
+                """
+                这篇文章可以概括为：${analysis.oneSentenceSummary}
+
+                分点理解：
+                $bullets
+                """.trimIndent()
+            }
+
+            cleanedQuestion.containsAny("关键词", "重点词", "核心词") -> {
+                "这篇文章的核心关键词包括：$keywords。"
+            }
+
+            cleanedQuestion.containsAny("重点", "核心观点", "知识点") -> {
+                """
+                可以把以下内容作为复习重点：
+                $bullets
+
+                这些内容覆盖了文章中的核心信息，适合整理到课堂笔记或复习提纲中。
+                """.trimIndent()
+            }
+
+            cleanedQuestion.containsAny("复习", "考试", "题目", "练习题") -> {
+                generateQuizQuestions(analysis)
+                    .mapIndexed { index, item ->
+                        "${index + 1}. ${item.question}\n参考答案：${item.referenceAnswer}"
+                    }
+                    .joinToString("\n\n")
+            }
+
+            cleanedQuestion.containsAny("卡片", "知识卡片") -> {
+                "已根据文章摘要生成知识卡片，可在知识卡片页面查看。"
+            }
+
+            else -> {
+                """
+                根据当前文章内容，可以从以下几个方面理解：
+
+                一句话总结：${analysis.oneSentenceSummary}
+                关键词：$keywords
+                分点摘要：
+                $bullets
+                """.trimIndent()
+            }
+        }
+    }
+
+    fun generateKnowledgeCards(analysis: ArticleAnalysis?): List<KnowledgeCard> {
+        if (analysis == null) return emptyList()
+
+        val keywordCards = analysis.keywords.take(3).map { keyword ->
+            KnowledgeCard(
+                title = keyword,
+                type = "概念",
+                content = "该关键词是理解文章内容的重要入口，可结合摘要内容进行复习。",
+            )
+        }
+
+        val summaryCard = KnowledgeCard(
+            title = "核心观点",
+            type = "核心观点",
+            content = analysis.oneSentenceSummary,
+        )
+
+        val reviewCards = analysis.bulletSummaries.take(3).mapIndexed { index, bullet ->
+            KnowledgeCard(
+                title = "复习要点 ${index + 1}",
+                type = "复习",
+                content = bullet,
+            )
+        }
+
+        return listOf(summaryCard) + keywordCards + reviewCards
+    }
+
+    fun generateQuizQuestions(analysis: ArticleAnalysis?): List<QuizQuestion> {
+        if (analysis == null) return emptyList()
+
+        val firstBullet = analysis.bulletSummaries.firstOrNull() ?: analysis.oneSentenceSummary
+        return listOf(
+            QuizQuestion(
+                question = "这篇文章的主要内容是什么？",
+                referenceAnswer = analysis.oneSentenceSummary,
+            ),
+            QuizQuestion(
+                question = "文章中最重要的关键词有哪些？",
+                referenceAnswer = analysis.keywords.take(5).joinToString("、"),
+            ),
+            QuizQuestion(
+                question = "请概括文章中的一个核心观点。",
+                referenceAnswer = firstBullet,
+            ),
+        )
+    }
+
+    private fun String.containsAny(vararg terms: String): Boolean {
+        return terms.any { contains(it, ignoreCase = true) }
+    }
+
+    private fun List<String>.toNumberedText(): String {
+        return take(4).mapIndexed { index, item -> "${index + 1}. $item" }.joinToString("\n")
+    }
+}
+
 @Composable
 fun SmartReadAgentApp(modifier: Modifier = Modifier) {
     MaterialTheme(colorScheme = SmartReadColors) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            SmartReadHome(modifier = modifier)
+            SmartReadScaffold(modifier = modifier)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SmartReadHome(modifier: Modifier = Modifier) {
+private fun SmartReadScaffold(modifier: Modifier = Modifier) {
+    var currentScreen by remember { mutableStateOf(Screen.Home) }
     var inputText by remember { mutableStateOf(SampleTexts.first()) }
-    var analysisResult by remember { mutableStateOf(TextAnalyzer.analyze(inputText)) }
+    var analysis by remember { mutableStateOf(TextAnalyzer.analyze(inputText)) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -215,7 +369,7 @@ private fun SmartReadHome(modifier: Modifier = Modifier) {
                     Column {
                         Text("SmartRead Agent", fontWeight = FontWeight.Bold)
                         Text(
-                            text = "V0.2 摘要 MVP",
+                            text = "V0.3 Agent 问答与知识卡片",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B),
                         )
@@ -229,17 +383,14 @@ private fun SmartReadHome(modifier: Modifier = Modifier) {
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            IntroCard()
-            InputCard(
+        val contentModifier = Modifier
+            .padding(innerPadding)
+            .fillMaxSize()
+
+        when (currentScreen) {
+            Screen.Home -> HomeScreen(
                 inputText = inputText,
+                analysis = analysis,
                 errorMessage = errorMessage,
                 onInputChange = {
                     inputText = it
@@ -247,26 +398,83 @@ private fun SmartReadHome(modifier: Modifier = Modifier) {
                 },
                 onUseSample = { index ->
                     inputText = SampleTexts[index]
-                    analysisResult = TextAnalyzer.analyze(SampleTexts[index])
+                    analysis = TextAnalyzer.analyze(SampleTexts[index])
                     errorMessage = null
                 },
                 onAnalyze = {
                     val result = TextAnalyzer.analyze(inputText)
                     if (result == null) {
-                        analysisResult = null
-                        errorMessage = "请输入一段需要分析的文本。"
+                        analysis = null
+                        errorMessage = "请先输入一段需要分析的文本。"
                     } else {
-                        analysisResult = result
+                        analysis = result
                         errorMessage = null
                     }
                 },
                 onClear = {
                     inputText = ""
-                    analysisResult = null
+                    analysis = null
                     errorMessage = null
                 },
+                onOpenAgent = { currentScreen = Screen.AgentChat },
+                onOpenCards = { currentScreen = Screen.KnowledgeCards },
+                modifier = contentModifier,
             )
-            analysisResult?.let { ResultSection(it) } ?: EmptyResultCard()
+
+            Screen.AgentChat -> AgentChatScreen(
+                analysis = analysis,
+                onBack = { currentScreen = Screen.Home },
+                modifier = contentModifier,
+            )
+
+            Screen.KnowledgeCards -> KnowledgeCardsScreen(
+                analysis = analysis,
+                onBack = { currentScreen = Screen.Home },
+                modifier = contentModifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeScreen(
+    inputText: String,
+    analysis: ArticleAnalysis?,
+    errorMessage: String?,
+    onInputChange: (String) -> Unit,
+    onUseSample: (Int) -> Unit,
+    onAnalyze: () -> Unit,
+    onClear: () -> Unit,
+    onOpenAgent: () -> Unit,
+    onOpenCards: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        IntroCard()
+        InputCard(
+            inputText = inputText,
+            errorMessage = errorMessage,
+            onInputChange = onInputChange,
+            onUseSample = onUseSample,
+            onAnalyze = onAnalyze,
+            onClear = onClear,
+        )
+        if (analysis == null) {
+            EmptyResultCard(
+                onOpenAgent = onOpenAgent,
+                onOpenCards = onOpenCards,
+            )
+        } else {
+            ResultSection(
+                result = analysis,
+                onOpenAgent = onOpenAgent,
+                onOpenCards = onOpenCards,
+            )
         }
     }
 }
@@ -289,7 +497,7 @@ private fun IntroCard(modifier: Modifier = Modifier) {
                 color = Color(0xFF1E3A8A),
             )
             Text(
-                text = "当前版本先完成文本输入、示例文本、本地摘要、关键词提取和结果展示。LiteRT 与 Agent 问答留到后续版本接入。",
+                text = "当前版本支持文本摘要、关键词提取、Agent 问答、知识卡片和复习题生成。LiteRT 端侧模型留到 V0.4 接入。",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF334155),
             )
@@ -359,7 +567,7 @@ private fun InputCard(
                     onClick = onAnalyze,
                     shape = RoundedCornerShape(8.dp),
                 ) {
-                    Text("开始分析")
+                    Text("开始智能分析")
                 }
                 OutlinedButton(
                     modifier = Modifier.weight(1f),
@@ -374,7 +582,12 @@ private fun InputCard(
 }
 
 @Composable
-private fun ResultSection(result: AnalysisResult, modifier: Modifier = Modifier) {
+private fun ResultSection(
+    result: ArticleAnalysis,
+    onOpenAgent: () -> Unit,
+    onOpenCards: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -388,8 +601,51 @@ private fun ResultSection(result: AnalysisResult, modifier: Modifier = Modifier)
         }
         ResultCard(title = "分点摘要") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                result.bulletSummary.forEachIndexed { index, item ->
+                result.bulletSummaries.forEachIndexed { index, item ->
                     Text("${index + 1}. $item")
+                }
+            }
+        }
+        ResultActionCard(
+            onOpenAgent = onOpenAgent,
+            onOpenCards = onOpenCards,
+        )
+    }
+}
+
+@Composable
+private fun ResultActionCard(
+    onOpenAgent: () -> Unit,
+    onOpenCards: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text("智能阅读扩展", fontWeight = FontWeight.Bold, color = Color(0xFF166534))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenAgent,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("问问 Agent")
+                }
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenCards,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("生成知识卡片")
                 }
             }
         }
@@ -397,7 +653,319 @@ private fun ResultSection(result: AnalysisResult, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun ResultMetricRow(result: AnalysisResult, modifier: Modifier = Modifier) {
+private fun AgentChatScreen(
+    analysis: ArticleAnalysis?,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var draft by remember { mutableStateOf("") }
+    var messages by remember(analysis?.originalText) {
+        mutableStateOf(
+            listOf(
+                ChatMessage(
+                    role = MessageRole.AGENT,
+                    content = if (analysis == null) {
+                        "请先输入文章并完成摘要分析，再使用 Agent 问答功能。"
+                    } else {
+                        "可以围绕当前文章提问。我会根据摘要、关键词和分点摘要进行本地规则型回答。"
+                    },
+                ),
+            ),
+        )
+    }
+
+    fun sendQuestion(question: String) {
+        val cleaned = question.trim()
+        val answer = LocalReadingAgent.answerQuestion(cleaned, analysis)
+        messages = if (cleaned.isBlank()) {
+            messages + ChatMessage(MessageRole.AGENT, answer)
+        } else {
+            messages + ChatMessage(MessageRole.USER, cleaned) + ChatMessage(MessageRole.AGENT, answer)
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        PageHeader(
+            title = "Agent 问答",
+            subtitle = "基于当前文章内容进行提问",
+            onBack = onBack,
+        )
+        CurrentSummaryCard(analysis)
+        QuickQuestionSection(
+            questions = QuickQuestions,
+            onQuestionClick = ::sendQuestion,
+        )
+        ChatHistory(messages = messages)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedTextField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("输入问题") },
+                    placeholder = { Text("例如：帮我整理复习重点") },
+                    minLines = 2,
+                )
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        sendQuestion(draft)
+                        draft = ""
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("发送问题")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun KnowledgeCardsScreen(
+    analysis: ArticleAnalysis?,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val cards = LocalReadingAgent.generateKnowledgeCards(analysis)
+    val quizQuestions = LocalReadingAgent.generateQuizQuestions(analysis)
+
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        PageHeader(
+            title = "知识卡片",
+            subtitle = "根据文章摘要和关键词生成",
+            onBack = onBack,
+        )
+
+        if (cards.isEmpty()) {
+            FriendlyPromptCard("请先完成文章摘要分析，再使用该功能。")
+        } else {
+            Text("知识卡片", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            cards.forEach { card ->
+                KnowledgeCardItem(card)
+            }
+            QuizSection(quizQuestions)
+        }
+    }
+}
+
+@Composable
+private fun PageHeader(
+    title: String,
+    subtitle: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFEFF6FF)),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TextButton(onClick = onBack) {
+                Text("返回摘要页")
+            }
+            Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            Text(subtitle, color = Color(0xFF475569))
+        }
+    }
+}
+
+@Composable
+private fun CurrentSummaryCard(analysis: ArticleAnalysis?, modifier: Modifier = Modifier) {
+    if (analysis == null) {
+        FriendlyPromptCard(
+            text = "请先完成摘要分析，再使用该功能。",
+            modifier = modifier,
+        )
+    } else {
+        ResultCard(title = "当前文章摘要", modifier = modifier) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(analysis.oneSentenceSummary)
+                Text("关键词：${analysis.keywords.take(6).joinToString(" / ")}")
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickQuestionSection(
+    questions: List<String>,
+    onQuestionClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("快捷问题", fontWeight = FontWeight.Bold)
+            questions.forEach { question ->
+                OutlinedButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onQuestionClick(question) },
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(question)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatHistory(messages: List<ChatMessage>, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text("聊天记录", fontWeight = FontWeight.Bold)
+            messages.forEach { message ->
+                ChatBubble(message)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatBubble(message: ChatMessage, modifier: Modifier = Modifier) {
+    val isUser = message.role == MessageRole.USER
+    val bubbleColor = if (isUser) Color(0xFFDBEAFE) else Color(0xFFF8FAFC)
+    val arrangement = if (isUser) Arrangement.End else Arrangement.Start
+    val label = if (isUser) "我的问题" else "Agent 回答"
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = arrangement,
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(0.9f),
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = bubbleColor),
+        ) {
+            SelectionContainer {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(label, fontWeight = FontWeight.Bold, color = Color(0xFF334155))
+                    Text(message.content)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun KnowledgeCardItem(card: KnowledgeCard, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        SelectionContainer {
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = card.title,
+                        modifier = Modifier.weight(1f),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    TypeLabel(card.type)
+                }
+                Text(card.content)
+                Text(
+                    text = "来源：由当前文本摘要生成",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF64748B),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TypeLabel(type: String, modifier: Modifier = Modifier) {
+    Text(
+        text = type,
+        modifier = modifier
+            .background(Color(0xFFE0F2FE), RoundedCornerShape(8.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        color = Color(0xFF075985),
+        style = MaterialTheme.typography.bodySmall,
+        fontWeight = FontWeight.Bold,
+    )
+}
+
+@Composable
+private fun QuizSection(questions: List<QuizQuestion>, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text("复习题", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        questions.forEachIndexed { index, question ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text("简答题 ${index + 1}", fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                    Text(question.question)
+                    Text("参考答案：${question.referenceAnswer}", color = Color(0xFF475569))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResultMetricRow(result: ArticleAnalysis, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -464,7 +1032,11 @@ private fun ResultCard(
 }
 
 @Composable
-private fun EmptyResultCard(modifier: Modifier = Modifier) {
+private fun EmptyResultCard(
+    onOpenAgent: () -> Unit,
+    onOpenCards: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
@@ -472,11 +1044,46 @@ private fun EmptyResultCard(modifier: Modifier = Modifier) {
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text("等待分析", fontWeight = FontWeight.Bold, color = Color(0xFF9A3412))
-            Text("输入文本后点击“开始分析”，这里会显示一句话总结、关键词和分点摘要。")
+            Text("输入文本后点击“开始智能分析”，这里会显示一句话总结、关键词和分点摘要。")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenAgent,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("问问 Agent")
+                }
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenCards,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text("知识卡片")
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun FriendlyPromptCard(text: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF7ED)),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(14.dp),
+            color = Color(0xFF9A3412),
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
