@@ -25,6 +25,7 @@ APK 说明与安装文档：
 - `release\APK信息说明.md`：记录 APK 类型、版本、大小、SHA256 和适用范围。
 - `release\Android手机安装说明.md`：说明安卓手机安装步骤、推荐测试流程和常见问题。
 - `release\v1.0_release_notes.md`：用于 Gitee/GitHub Release 的发布说明。
+- GitHub Release：`https://github.com/heixuan-vsmenghu/SmartRead-Agent-Android/releases/tag/v1.0`。
 
 说明：`SmartReadAgent-v1.0-debug.apk` 是课程演示用 debug APK，可用于课程验收、真机测试和现场演示，不作为应用商店正式商业发布版本。
 
