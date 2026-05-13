@@ -20,6 +20,14 @@ release\SmartReadAgent-v1.0-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v1.0-debug.apk
 ```
 
+APK 说明与安装文档：
+
+- `release\APK信息说明.md`：记录 APK 类型、版本、大小、SHA256 和适用范围。
+- `release\Android手机安装说明.md`：说明安卓手机安装步骤、推荐测试流程和常见问题。
+- `release\v1.0_release_notes.md`：用于 Gitee/GitHub Release 的发布说明。
+
+说明：`SmartReadAgent-v1.0-debug.apk` 是课程演示用 debug APK，可用于课程验收、真机测试和现场演示，不作为应用商店正式商业发布版本。
+
 ## 项目简介
 
 SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学生阅读教材、文章、课堂资料时“信息量大、理解成本高、复习整理耗时”的问题，提供文本导入、自动摘要、关键词提取、知识卡片、Agent 问答、LiteRT 端侧句子分析和历史记录等功能。
@@ -112,7 +120,7 @@ SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学�
 
 ## 后续计划
 
-- 后续补充真机体验测试、最终发布说明和提交材料。
+- 后续补充安卓真机体验测试反馈、Gitee Release 上传截图和课程平台提交截图。
 - 根据真实测试结果补充 Bug 记录、截图和项目报告。
 
 ## 运行说明
