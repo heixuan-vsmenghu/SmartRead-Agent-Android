@@ -597,7 +597,7 @@ private fun SmartReadScaffold(modifier: Modifier = Modifier) {
                     Column {
                         Text("SmartRead Agent", fontWeight = FontWeight.Bold)
                         Text(
-                            text = "V0.5 历史记录与体验优化",
+                            text = "V1.0 期末演示稳定版",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B),
                         )

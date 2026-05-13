@@ -1,12 +1,12 @@
 # SmartRead Agent Android 工程
 
-本目录为 SmartRead Agent V0.5 Android/Kotlin 工程。
+本目录为 SmartRead Agent V1.0 Android/Kotlin 工程。
 
-Android 工程已创建，当前版本 V0.5 已实现摘要 MVP、Agent 问答、知识卡片、复习题生成、LiteRT 端侧句子重要性分析和本地历史记录，可通过 Gradle Wrapper 构建 Debug APK。
+Android 工程已创建，当前版本 V1.0 已实现摘要 MVP、Agent 问答、知识卡片、复习题生成、LiteRT 端侧句子重要性分析和本地历史记录，可通过 Gradle Wrapper 构建 Debug APK。
 
 ## 当前实现
 
-V0.5 已完成一个可运行的 Jetpack Compose Demo，功能包括：
+V1.0 已完成一个可运行的 Jetpack Compose Demo，功能包括：
 
 - 文本粘贴输入。
 - 3 条示例文本选择。
@@ -66,6 +66,7 @@ release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
 release\SmartReadAgent-v0.4-debug.apk
 release\SmartReadAgent-v0.5-debug.apk
+release\SmartReadAgent-v1.0-debug.apk
 ```
 
 `*.apk` 按 `.gitignore` 规则不提交到 Git 仓库。
@@ -87,6 +88,9 @@ release\SmartReadAgent-v0.5-debug.apk
 - 2026-05-12：V0.5 已实现 SharedPreferences 历史记录保存和历史记录页。
 - 2026-05-12：V0.5 `:app:assembleDebug` 构建成功，APK 已复制到 `release\SmartReadAgent-v0.5-debug.apk`。
 - 2026-05-12：V0.5 APK 已安装到 `Pixel_8` 模拟器，已验证历史记录页和恢复历史分析流程。
+- 2026-05-13：V1.0 已将 Android 版本号更新为 `versionCode = 10`、`versionName = "1.0"`。
+- 2026-05-13：V1.0 App 顶部文案已更新为 `V1.0 期末演示稳定版`。
+- 2026-05-13：V1.0 `:app:clean :app:assembleDebug` 构建通过，APK 输出到 `android\app\build\outputs\apk\debug\app-debug.apk`，并复制为 `release\SmartReadAgent-v1.0-debug.apk`。
 
 当前已验证功能：
 
@@ -108,4 +112,5 @@ release\SmartReadAgent-v0.5-debug.apk
 
 ## 后续计划
 
-- 后续：补充真机体验测试、发布说明和最终提交材料。
+- 手动补充 V1.0 App 最终截图。
+- 手动补充真机安装和完整演示流程复测记录。

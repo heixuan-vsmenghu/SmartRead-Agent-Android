@@ -1,5 +1,25 @@
 # SmartRead Agent：AI 智读助手
 
+## V1.0 期末演示稳定版
+
+SmartRead Agent 当前进入 V1.0 期末演示稳定版。本阶段功能范围已经冻结，不再新增云端大模型 API、用户登录、OCR、多设备同步、后端服务器、复杂数据库和语音输入等大功能，重点完成构建验证、APK 归档、测试记录、演示文档和双课程最终交付整理。
+
+V1.0 保留并稳定以下功能：文本输入与示例文本、本地摘要、关键词提取、分点摘要、LiteRT 端侧句子重要性分析、Agent 问答、知识卡片、复习题、历史记录保存、历史记录恢复和清空历史记录。
+
+V1.0 Android 版本信息：
+
+```text
+versionCode = 10
+versionName = "1.0"
+```
+
+V1.0 课程演示 APK 路径：
+
+```text
+release\SmartReadAgent-v1.0-debug.apk
+H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v1.0-debug.apk
+```
+
 ## 项目简介
 
 SmartRead Agent 是一款 Android/Kotlin 移动端 AI 阅读助手，面向学生阅读教材、文章、课堂资料时“信息量大、理解成本高、复习整理耗时”的问题，提供文本导入、自动摘要、关键词提取、知识卡片、Agent 问答、LiteRT 端侧句子分析和历史记录等功能。
@@ -123,6 +143,7 @@ release\SmartReadAgent-v0.2-debug.apk
 release\SmartReadAgent-v0.3-debug.apk
 release\SmartReadAgent-v0.4-debug.apk
 release\SmartReadAgent-v0.5-debug.apk
+release\SmartReadAgent-v1.0-debug.apk
 ```
 
 完整路径：
@@ -132,6 +153,7 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.3-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.4-debug.apk
 H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v0.5-debug.apk
+H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartReadAgent\release\SmartReadAgent-v1.0-debug.apk
 ```
 
 说明：APK 文件按 `.gitignore` 规则不提交到 Git 仓库。
@@ -159,6 +181,12 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 - V0.4 知识卡片功能回归截图：`V0.4知识卡片功能回归_20260512.png`。
 - V0.5 历史记录页截图：`V0.5历史记录页_20260512.png`。
 - V0.5 历史记录恢复截图：`V0.5历史记录恢复_20260512.png`。
+- V1.0 首页截图：`V1.0首页_20260512.png`。
+- V1.0 摘要结果截图：`V1.0摘要结果_20260512.png`。
+- V1.0 LiteRT 端侧分析截图：`V1.0LiteRT端侧分析_20260512.png`。
+- V1.0 Agent 问答截图：`V1.0Agent问答_20260512.png`。
+- V1.0 知识卡片截图：`V1.0知识卡片_20260512.png`。
+- V1.0 历史记录截图：`V1.0历史记录页_20260512.png`、`V1.0历史记录恢复_20260512.png`、`V1.0清空历史记录_20260512.png`。
 
 ## 版本记录占位
 
@@ -169,3 +197,4 @@ H:\福建师范大学\大三下\软件实践研发（3）\期末大作业_SmartR
 | v0.3 | 2026-05-12 | Agent 问答、知识卡片、复习题生成、APK 构建和模拟器测试 | 已完成 |
 | v0.4 | 2026-05-12 | LiteRT 端侧句子重要性模型、Android assets 集成、APK 构建和模拟器截图验证 | 已完成 |
 | v0.5 | 2026-05-12 | 本地历史记录、历史页、恢复历史分析、APK 构建和模拟器截图验证 | 已完成初步验证 |
+| v1.0 | 2026-05-13 | 期末演示稳定版，冻结功能范围，更新版本号，整理最终 APK、测试记录、项目说明、演示脚本和双课程提交材料 | 收口完成后发布 |

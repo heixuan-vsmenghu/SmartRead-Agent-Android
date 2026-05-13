@@ -36,3 +36,12 @@ python model\train_sentence_importance_model.py
 - 输出 shape：`[1, 1]`
 - 模型大小：1496 bytes
 - SHA256：`11462553e040257c11677bc7824021440761922ff4a8b3ced2bb7d21904b9dde`
+
+## V1.0 模型状态
+
+V1.0 期末演示稳定版不重新训练模型，继续沿用 V0.4 已导出的 LiteRT/TensorFlow Lite 句子重要性模型。模型文件与 Android assets 对应关系如下：
+
+- 训练导出文件：`model/exports/sentence_importance_model.tflite`
+- Android 内置文件：`android/app/src/main/assets/sentence_importance_model.tflite`
+
+本阶段重点是保证模型随 APK 打包并在摘要结果页稳定展示端侧分析结果。模型效果仍属于课程项目轻量模型，后续可通过扩充训练样本和特征设计继续优化。
