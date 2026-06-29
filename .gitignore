@@ -27,4 +27,5 @@ api_keys.*
 model/data/raw/
 model/exports/*.tmp
 *.log
-
+__pycache__/
+*.pyc
