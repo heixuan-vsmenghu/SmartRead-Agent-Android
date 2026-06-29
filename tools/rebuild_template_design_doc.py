@@ -245,6 +245,142 @@ def make_module_diagram(path: Path) -> None:
     img.save(path)
 
 
+def make_use_case_diagram(path: Path) -> None:
+    img = Image.new("RGB", (1500, 900), "#f8fafc")
+    draw = ImageDraw.Draw(img)
+    title_font = font(42)
+    label_font = font(27)
+    small_font = font(21)
+    body_font = font(24)
+    muted = "#475569"
+
+    draw_centered(draw, (750, 58), "SmartRead Agent 顶层用例图", "#111827", title_font)
+
+    def actor_card(x1, y1, x2, y2, title, items, fill):
+        rounded_box(draw, (x1, y1, x2, y2), fill, "#2563eb", radius=24, width=3)
+        draw_centered(draw, ((x1 + x2) // 2, y1 + 42), title, "#1e3a8a", label_font)
+        y = y1 + 92
+        for idx, item in enumerate(items, start=1):
+            rounded_box(draw, (x1 + 36, y, x2 - 36, y + 62), "#ffffff", "#93c5fd", radius=16, width=2)
+            draw.text((x1 + 58, y + 16), f"{idx}. {item}", fill="#0f172a", font=body_font)
+            y += 82
+
+    student_items = [
+        "输入或选择示例文本",
+        "生成摘要、关键词和分点摘要",
+        "查看 LiteRT 端侧句子分析",
+        "进行 Agent 问答",
+        "查看知识卡片和复习题",
+        "恢复或清空历史记录",
+    ]
+    demo_items = [
+        "按演示脚本走完整功能流程",
+        "展示摘要、端侧分析和问答结果",
+        "展示复习材料与历史记录",
+    ]
+
+    actor_card(110, 140, 690, 720, "学生用户", student_items, "#dbeafe")
+    actor_card(810, 140, 1390, 490, "小组演示者", demo_items, "#e0f2fe")
+
+    rounded_box(draw, (810, 560, 1390, 720), "#ecfdf5", "#059669", radius=24, width=3)
+    draw_centered(draw, (1100, 605), "系统边界", "#065f46", label_font)
+    draw.text((855, 655), "SmartRead Agent Android App", fill="#0f172a", font=body_font)
+    draw.text((855, 690), "输入、分析、复习、历史记录均在移动端完成展示", fill=muted, font=small_font)
+
+    draw.text(
+        (90, 820),
+        "说明：用例按参与者分组展示，每一项均对应 V1.0 演示中的可操作功能。",
+        fill="#374151",
+        font=small_font,
+    )
+    img.save(path)
+
+
+def make_object_model_diagram(path: Path) -> None:
+    img = Image.new("RGB", (1500, 920), "#f8fafc")
+    draw = ImageDraw.Draw(img)
+    title_font = font(42)
+    label_font = font(25)
+    small_font = font(20)
+    body_font = font(23)
+
+    draw_centered(draw, (750, 55), "SmartRead Agent 数据对象模型", "#111827", title_font)
+
+    def object_card(x1, y1, x2, y2, title, fields, note, fill="#e0f2fe"):
+        rounded_box(draw, (x1, y1, x2, y2), fill, "#0284c7", radius=22, width=3)
+        draw_centered(draw, ((x1 + x2) // 2, y1 + 38), title, "#0f172a", label_font)
+        y = y1 + 78
+        for field in fields:
+            draw.text((x1 + 28, y), field, fill="#0f172a", font=body_font)
+            y += 34
+
+    object_card(
+        420,
+        125,
+        1080,
+        325,
+        "ArticleAnalysis  主分析结果",
+        ["originalText / oneSentenceSummary / keywords", "bulletSummary / sentenceCount / characterCount", "sentenceImportanceList / createdAt"],
+        "由 TextAnalyzer 生成，是后续展示、问答和复习材料的基础。",
+        "#dbeafe",
+    )
+    object_card(
+        95,
+        370,
+        455,
+        585,
+        "SentenceImportance",
+        ["sentence", "score", "level", "source / index"],
+        "LiteRT 或规则分析后的句子重要性结果。",
+    )
+    object_card(
+        570,
+        370,
+        930,
+        585,
+        "ChatMessage",
+        ["role", "content", "timestamp"],
+        "Agent 问答界面中的单条对话消息。",
+    )
+    object_card(
+        1045,
+        370,
+        1405,
+        585,
+        "KnowledgeCard",
+        ["title", "type", "content"],
+        "从摘要、关键词和复习重点整理出的卡片。",
+    )
+    object_card(
+        330,
+        660,
+        690,
+        820,
+        "QuizQuestion",
+        ["question", "referenceAnswer"],
+        "根据文章内容生成的复习题。",
+        "#ecfdf5",
+    )
+    object_card(
+        810,
+        660,
+        1230,
+        820,
+        "HistoryRecord",
+        ["id / title / preview / savedAt", "originalText / summary / keywords"],
+        "本地历史记录保存和恢复使用的数据结构。",
+        "#ecfdf5",
+    )
+
+    draw.text(
+        (85, 875),
+        "说明：对象模型采用分区卡片展示字段和用途；主对象为 ArticleAnalysis，其余对象围绕展示、问答、复习和历史记录展开。",
+        fill="#374151",
+        font=small_font,
+    )
+    img.save(path)
+
+
 def make_diagrams() -> dict[str, Path]:
     ASSETS.mkdir(parents=True, exist_ok=True)
     paths = {
