@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 import re
+import subprocess
+import sys
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -1050,7 +1052,10 @@ def build_docx() -> None:
         if path.exists():
             doc.add_picture(str(path), width=Inches(3.2))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.save(DOCS / "SmartReadAgent_软件详细设计说明书_初稿.docx")
+    try:
+        doc.save(DOCS / "SmartReadAgent_软件详细设计说明书_初稿.docx")
+    except PermissionError:
+        doc.save(DOCS / "SmartReadAgent_软件详细设计说明书_自动生成临时版.docx")
 
 
 def main() -> None:
@@ -1058,6 +1063,12 @@ def main() -> None:
     build_markdown_files()
     build_pptx()
     build_docx()
+    # The teacher template has a fixed detailed-design structure. Rebuild that
+    # document last so this broad generator cannot overwrite it with the looser
+    # narrative version.
+    template_rebuilder = PROJECT / "tools" / "rebuild_template_design_doc.py"
+    if template_rebuilder.exists():
+        subprocess.run([sys.executable, str(template_rebuilder)], check=True)
     print("generated:")
     for path in [
         DOCS / "期末演示PPT逐页内容.md",
