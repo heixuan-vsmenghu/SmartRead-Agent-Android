@@ -139,7 +139,7 @@ def make_object_model_diagram(path: Path) -> None:
     img.save(path)
 
 
-def make_module_diagram(path: Path) -> None:
+def _make_module_diagram_old(path: Path) -> None:
     img = Image.new("RGB", (1500, 920), "#f8fafc")
     draw = ImageDraw.Draw(img)
     title_font = font(42)
@@ -172,6 +172,76 @@ def make_module_diagram(path: Path) -> None:
     arrow(draw, (855, 255), (855, 630))
     arrow(draw, (980, 677), (1065, 677))
     draw.text((75, 835), "说明：主流程先生成 ArticleAnalysis，再分发给 LiteRT、Agent、知识卡片和历史记录模块；模型失败时有规则兜底。", fill="#374151", font=small_font)
+    img.save(path)
+
+
+def make_module_diagram(path: Path) -> None:
+    img = Image.new("RGB", (1500, 920), "#f8fafc")
+    draw = ImageDraw.Draw(img)
+    title_font = font(42)
+    label_font = font(23)
+    small_font = font(20)
+    lane_font = font(18)
+    line_color = "#334155"
+
+    def draw_arrow_head(start, end, fill=line_color):
+        x1, y1 = start
+        x2, y2 = end
+        if abs(x2 - x1) >= abs(y2 - y1):
+            sign = 1 if x2 > x1 else -1
+            points = [(x2, y2), (x2 - sign * 16, y2 - 9), (x2 - sign * 16, y2 + 9)]
+        else:
+            sign = 1 if y2 > y1 else -1
+            points = [(x2, y2), (x2 - 9, y2 - sign * 16), (x2 + 9, y2 - sign * 16)]
+        draw.polygon(points, fill=fill)
+
+    def connector(points, fill=line_color, width=4):
+        draw.line(points, fill=fill, width=width, joint="curve")
+        draw_arrow_head(points[-2], points[-1], fill)
+
+    draw_centered(draw, (750, 55), "SmartRead Agent 模块关系图", "#111827", title_font)
+    draw.text((70, 120), "主流程", fill="#64748b", font=lane_font)
+    draw.text((70, 335), "分析结果分发", fill="#64748b", font=lane_font)
+    draw.text((70, 555), "本地能力模块", fill="#64748b", font=lane_font)
+
+    modules = [
+        (90, 155, 300, 240, "文本输入模块"),
+        (390, 155, 625, 240, "TextAnalyzer\n摘要/关键词"),
+        (715, 155, 950, 240, "ArticleAnalysis\n分析结果"),
+        (1060, 155, 1295, 240, "Compose UI\n结果展示"),
+        (140, 405, 400, 500, "SentenceImportance\nAnalyzer"),
+        (620, 405, 880, 500, "LocalReadingAgent\n本地规则问答"),
+        (1100, 405, 1360, 500, "Knowledge/Quiz\n复习材料"),
+        (140, 635, 400, 730, "LiteRT Classifier\n.tflite 推理"),
+        (620, 635, 880, 730, "HistoryRepository\n历史记录"),
+    ]
+    for x1, y1, x2, y2, text in modules:
+        rounded_box(draw, (x1, y1, x2, y2), "#ecfdf5", "#059669")
+        draw_centered(draw, ((x1 + x2) // 2, (y1 + y2) // 2), text, "#064e3b", label_font)
+
+    # Main pipeline.
+    connector([(300, 198), (390, 198)])
+    connector([(625, 198), (715, 198)])
+    connector([(950, 198), (1060, 198)])
+
+    # Distribution bus from ArticleAnalysis. The bus keeps all branch lines away
+    # from module boxes and avoids the earlier diagonal crossings.
+    draw.line([(832, 240), (832, 340), (270, 340), (1230, 340)], fill=line_color, width=4, joint="curve")
+    connector([(270, 340), (270, 405)])
+    connector([(750, 340), (750, 405)])
+    connector([(1230, 340), (1230, 405)])
+
+    # Local processing relationships.
+    connector([(270, 500), (270, 635)])
+    connector([(750, 500), (750, 635)])
+    connector([(880, 452), (1100, 452)])
+
+    draw.text(
+        (75, 835),
+        "说明：主链路先生成 ArticleAnalysis，再通过分发线交给端侧分析、问答、复习材料和历史记录模块；折线连接只表示模块调用或数据流向。",
+        fill="#374151",
+        font=small_font,
+    )
     img.save(path)
 
 
