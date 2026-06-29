@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 import shutil
 
+from PIL import Image
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_AUTO_SHAPE_TYPE
@@ -17,6 +18,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 DOCS = PROJECT / "docs"
 SCREENSHOTS = PROJECT / "screenshots" / "app"
 ASSETS = DOCS / "design-assets"
+PPT_ASSETS = DOCS / "ppt-assets"
 
 OUT_MAIN = DOCS / "SmartReadAgent_期末演示PPT.pptx"
 OUT_V1 = DOCS / "SmartReadAgent_V1.0_期末演示PPT.pptx"
@@ -37,6 +39,19 @@ AMBER = RGBColor(217, 119, 6)
 BG = RGBColor(248, 250, 252)
 CARD = RGBColor(255, 255, 255)
 LINE = RGBColor(203, 213, 225)
+
+FOCUS_CROPS = {
+    "home_focus.png": ("V1.0首页_20260512.png", (25, 130, 1055, 2050)),
+    "text_input_focus.png": ("V1.0文本输入_20260512.png", (25, 240, 1055, 1880)),
+    "summary_focus.png": ("V1.0摘要结果_20260512.png", (25, 300, 1055, 1800)),
+    "entry_focus.png": ("V1.0操作入口_20260512.png", (25, 260, 1055, 1820)),
+    "litert_focus.png": ("V1.0LiteRT端侧分析_20260512.png", (25, 350, 1055, 1820)),
+    "agent_focus.png": ("V1.0Agent快捷问题_20260512.png", (25, 345, 1055, 1900)),
+    "knowledge_focus.png": ("V1.0知识卡片_20260512.png", (25, 260, 1055, 1780)),
+    "quiz_focus.png": ("V1.0复习题_20260512.png", (25, 260, 1055, 1780)),
+    "history_focus.png": ("V1.0历史记录恢复_20260512.png", (25, 250, 1055, 1820)),
+    "history_list_focus.png": ("V1.0历史记录页_20260512.png", (25, 250, 1055, 1820)),
+}
 
 
 SLIDES = [
@@ -62,7 +77,7 @@ SLIDES = [
             ("整理过程散", "摘要、关键词、复习点通常分散在笔记里，回看时需要重新梳理。"),
             ("移动端高频", "手机是学生最容易随手使用的设备，适合承载轻量阅读辅助流程。"),
         ],
-        "image": "V1.0文本输入_20260512.png",
+        "image": "text_input_focus.png",
     },
     {
         "section": "定位",
@@ -75,7 +90,7 @@ SLIDES = [
             ("03", "端侧评分", "LiteRT 输出句子重要性"),
             ("04", "复习回看", "Agent、卡片、复习题、历史记录"),
         ],
-        "image": "V1.0摘要结果_20260512.png",
+        "image": "summary_focus.png",
     },
     {
         "section": "功能",
@@ -90,7 +105,7 @@ SLIDES = [
             ("复习", "知识卡片、复习题、参考答案"),
             ("回看", "历史记录保存、恢复、清空"),
         ],
-        "image": "V1.0操作入口_20260512.png",
+        "image": "entry_focus.png",
     },
     {
         "section": "界面",
@@ -98,10 +113,8 @@ SLIDES = [
         "subtitle": "从首页到学习材料，主要页面已经形成完整操作路径",
         "type": "gallery",
         "images": [
-            ("首页", "V1.0首页_20260512.png"),
-            ("摘要结果", "V1.0摘要结果_20260512.png"),
-            ("LiteRT 分析", "V1.0LiteRT端侧分析_20260512.png"),
-            ("Agent 问答", "V1.0Agent问答_20260512.png"),
+            ("首页", "home_focus.png"),
+            ("摘要结果", "summary_focus.png"),
         ],
     },
     {
@@ -128,7 +141,7 @@ SLIDES = [
             (".tflite 模型", "assets 集成并本地推理"),
             ("重要性等级", "分数转为高/中/低展示"),
         ],
-        "image": "V1.0LiteRT端侧分析_20260512.png",
+        "image": "litert_focus.png",
     },
     {
         "section": "问答",
@@ -140,7 +153,7 @@ SLIDES = [
             ("意图识别", "区分概括、关键词、复习重点、复习题、卡片提示等问题类型。"),
             ("回答方式", "使用本地规则组织答案，不依赖外部大模型接口。"),
         ],
-        "image": "V1.0Agent快捷问题_20260512.png",
+        "image": "agent_focus.png",
     },
     {
         "section": "复习",
@@ -148,10 +161,8 @@ SLIDES = [
         "subtitle": "把阅读结果转化为可复习的卡片和题目",
         "type": "gallery",
         "images": [
-            ("知识卡片", "V1.0知识卡片_20260512.png"),
-            ("复习题", "V1.0复习题_20260512.png"),
-            ("手动提问", "V1.0Agent手动提问_20260512.png"),
-            ("历史恢复", "V1.0历史记录恢复_20260512.png"),
+            ("知识卡片", "knowledge_focus.png"),
+            ("复习题", "quiz_focus.png"),
         ],
     },
     {
@@ -178,7 +189,7 @@ SLIDES = [
             ("APK 产物", "SmartReadAgent-v1.0-debug.apk"),
             ("文档材料", "README、项目说明、详细设计说明书、演示脚本"),
         ],
-        "image": "V1.0历史记录页_20260512.png",
+        "image": "history_list_focus.png",
     },
     {
         "section": "迭代",
@@ -214,7 +225,7 @@ SLIDES = [
             ("运行验证", "模拟器回归验证，安卓真机完成体验反馈"),
             ("交付状态", "源码、模型、APK、截图、设计说明书和汇报材料已归档"),
         ],
-        "image": "V1.0历史记录恢复_20260512.png",
+        "image": "history_focus.png",
     },
     {
         "section": "总结",
@@ -314,7 +325,20 @@ def add_picture_fit(slide, image_path, left, top, max_width, max_height, border=
     return pic
 
 
+def make_focus_crops() -> None:
+    PPT_ASSETS.mkdir(parents=True, exist_ok=True)
+    for out_name, (source_name, box) in FOCUS_CROPS.items():
+        source = SCREENSHOTS / source_name
+        target = PPT_ASSETS / out_name
+        with Image.open(source) as img:
+            cropped = img.crop(box)
+            cropped.save(target)
+
+
 def screenshot(name: str) -> Path:
+    focused = PPT_ASSETS / name
+    if focused.exists():
+        return focused
     return SCREENSHOTS / name
 
 
@@ -339,46 +363,53 @@ def render_cover(slide, data):
 
 
 def render_problem(slide, data):
-    x = Inches(0.75)
+    y = Inches(2.06)
     for title, body in data["cards"]:
-        add_box(slide, x, Inches(2.10), Inches(2.75), Inches(1.50), RGBColor(239, 246, 255), RGBColor(147, 197, 253))
-        text_box(slide, x + Inches(0.22), Inches(2.30), Inches(2.3), Inches(0.32), title, 18, BLUE_DARK, True)
-        text_box(slide, x + Inches(0.22), Inches(2.78), Inches(2.3), Inches(0.58), body, 12.5, TEXT)
-        x += Inches(3.05)
-    add_box(slide, Inches(0.78), Inches(4.10), Inches(5.95), Inches(1.28), RGBColor(240, 253, 250), RGBColor(94, 234, 212))
+        add_box(slide, Inches(0.78), y, Inches(6.65), Inches(0.92), RGBColor(239, 246, 255), RGBColor(147, 197, 253))
+        text_box(slide, Inches(1.05), y + Inches(0.15), Inches(1.45), Inches(0.28), title, 15, BLUE_DARK, True)
+        text_box(slide, Inches(2.55), y + Inches(0.15), Inches(4.35), Inches(0.36), body, 11.5, TEXT)
+        y += Inches(1.05)
+    add_box(slide, Inches(0.78), Inches(5.38), Inches(6.65), Inches(0.92), RGBColor(240, 253, 250), RGBColor(94, 234, 212))
     paragraph_text(slide.shapes[-1], ["设计取向：不做泛泛的聊天工具，而是聚焦“课程资料阅读”这一高频小场景。", "V1.0 的价值在于把阅读、理解和复习整理放进一个移动端闭环。"], 14, TEAL_DARK)
-    add_picture_fit(slide, screenshot(data["image"]), Inches(8.35), Inches(2.05), Inches(2.6), Inches(4.4))
+    add_picture_fit(slide, screenshot(data["image"]), Inches(8.75), Inches(1.95), Inches(3.25), Inches(5.15))
 
 
 def render_workflow(slide, data):
-    x = Inches(0.75)
     colors = [RGBColor(239, 246, 255), RGBColor(236, 253, 245), RGBColor(255, 251, 235), RGBColor(240, 249, 255)]
-    for idx, (no, title, body) in enumerate(data["steps"]):
-        add_box(slide, x, Inches(2.10), Inches(2.55), Inches(1.55), colors[idx], LINE)
-        text_box(slide, x + Inches(0.20), Inches(2.28), Inches(0.55), Inches(0.30), no, 18, BLUE_DARK, True)
-        text_box(slide, x + Inches(0.82), Inches(2.25), Inches(1.6), Inches(0.32), title, 17, NAVY, True)
-        text_box(slide, x + Inches(0.25), Inches(2.84), Inches(2.1), Inches(0.42), body, 12.5, MUTED)
-        if idx < 3:
-            text_box(slide, x + Inches(2.48), Inches(2.70), Inches(0.28), Inches(0.24), "→", 18, MUTED, True)
-        x += Inches(2.82)
-    add_picture_fit(slide, screenshot(data["image"]), Inches(4.95), Inches(4.15), Inches(3.7), Inches(2.2))
+    positions = [(0.78, 2.10), (4.05, 2.10), (0.78, 4.12), (4.05, 4.12)]
+    for idx, ((no, title, body), (x, y)) in enumerate(zip(data["steps"], positions)):
+        add_box(slide, Inches(x), Inches(y), Inches(2.95), Inches(1.48), colors[idx], LINE)
+        text_box(slide, Inches(x + 0.22), Inches(y + 0.22), Inches(0.55), Inches(0.30), no, 18, BLUE_DARK, True)
+        text_box(slide, Inches(x + 0.86), Inches(y + 0.20), Inches(1.75), Inches(0.32), title, 16, NAVY, True)
+        text_box(slide, Inches(x + 0.25), Inches(y + 0.82), Inches(2.35), Inches(0.36), body, 11.5, MUTED)
+    add_picture_fit(slide, screenshot(data["image"]), Inches(8.85), Inches(1.95), Inches(3.15), Inches(5.15))
 
 
 def render_matrix(slide, data):
-    positions = [(0.75, 2.10), (3.75, 2.10), (6.75, 2.10), (0.75, 4.25), (3.75, 4.25), (6.75, 4.25)]
+    positions = [(0.78, 2.05), (3.80, 2.05), (0.78, 3.78), (3.80, 3.78), (0.78, 5.51), (3.80, 5.51)]
     for (title, body), (x, y) in zip(data["items"], positions):
-        add_box(slide, Inches(x), Inches(y), Inches(2.62), Inches(1.36), RGBColor(255, 255, 255), LINE)
+        add_box(slide, Inches(x), Inches(y), Inches(2.72), Inches(1.20), RGBColor(255, 255, 255), LINE)
         text_box(slide, Inches(x + 0.22), Inches(y + 0.18), Inches(2.1), Inches(0.30), title, 17, TEAL_DARK, True)
-        text_box(slide, Inches(x + 0.22), Inches(y + 0.60), Inches(2.1), Inches(0.48), body, 12.5, TEXT)
-    add_picture_fit(slide, screenshot(data["image"]), Inches(9.75), Inches(2.00), Inches(2.35), Inches(4.80))
+        text_box(slide, Inches(x + 0.22), Inches(y + 0.58), Inches(2.15), Inches(0.40), body, 11.2, TEXT)
+    add_picture_fit(slide, screenshot(data["image"]), Inches(8.85), Inches(1.95), Inches(3.15), Inches(5.15))
 
 
 def render_gallery(slide, data):
-    positions = [(0.80, 2.05), (3.98, 2.05), (7.16, 2.05), (10.34, 2.05)]
+    count = len(data["images"])
+    if count == 2:
+        positions = [(2.05, 2.00), (7.15, 2.00)]
+        card_w = Inches(4.05)
+        pic_w = Inches(3.45)
+        pic_h = Inches(4.70)
+    else:
+        positions = [(0.80, 2.00), (4.62, 2.00), (8.44, 2.00)]
+        card_w = Inches(3.20)
+        pic_w = Inches(2.70)
+        pic_h = Inches(4.60)
     for (label, img), (x, y) in zip(data["images"], positions):
-        add_box(slide, Inches(x), Inches(y), Inches(2.38), Inches(4.55), RGBColor(255, 255, 255), LINE)
-        add_picture_fit(slide, screenshot(img), Inches(x + 0.18), Inches(y + 0.18), Inches(2.02), Inches(3.72), border=False)
-        text_box(slide, Inches(x + 0.22), Inches(y + 4.05), Inches(1.95), Inches(0.30), label, 13, BLUE_DARK, True, PP_ALIGN.CENTER)
+        add_box(slide, Inches(x), Inches(y), card_w, Inches(5.15), RGBColor(255, 255, 255), LINE)
+        add_picture_fit(slide, screenshot(img), Inches(x + 0.30), Inches(y + 0.18), pic_w, pic_h, border=False)
+        text_box(slide, Inches(x + 0.30), Inches(y + 4.82), card_w - Inches(0.60), Inches(0.28), label, 13, BLUE_DARK, True, PP_ALIGN.CENTER)
 
 
 def render_architecture(slide, data):
@@ -394,24 +425,26 @@ def render_architecture(slide, data):
 
 
 def render_ml(slide, data):
-    x = Inches(0.78)
+    y = Inches(2.05)
     for title, body in data["pipeline"]:
-        add_box(slide, x, Inches(2.20), Inches(2.45), Inches(1.20), RGBColor(239, 246, 255), RGBColor(147, 197, 253))
-        text_box(slide, x + Inches(0.20), Inches(2.38), Inches(2.0), Inches(0.30), title, 15, BLUE_DARK, True, PP_ALIGN.CENTER)
-        text_box(slide, x + Inches(0.22), Inches(2.82), Inches(1.95), Inches(0.28), body, 10.5, TEXT, align=PP_ALIGN.CENTER)
-        x += Inches(2.72)
-    text_box(slide, Inches(1.65), Inches(3.55), Inches(9.1), Inches(0.40), "Text → Feature Vector → LiteRT Interpreter → Score / Level", 18, NAVY, True, PP_ALIGN.CENTER)
-    add_picture_fit(slide, screenshot(data["image"]), Inches(4.7), Inches(4.05), Inches(3.7), Inches(2.35))
+        add_box(slide, Inches(0.80), y, Inches(6.55), Inches(0.78), RGBColor(239, 246, 255), RGBColor(147, 197, 253))
+        text_box(slide, Inches(1.05), y + Inches(0.14), Inches(1.35), Inches(0.28), title, 14, BLUE_DARK, True)
+        text_box(slide, Inches(2.48), y + Inches(0.14), Inches(4.35), Inches(0.28), body, 11.5, TEXT)
+        y += Inches(0.93)
+    text_box(slide, Inches(0.95), Inches(5.88), Inches(6.20), Inches(0.36), "Text → Feature Vector → LiteRT Interpreter → Score / Level", 15, NAVY, True, PP_ALIGN.CENTER)
+    add_picture_fit(slide, screenshot(data["image"]), Inches(8.75), Inches(1.95), Inches(3.25), Inches(5.15))
 
 
 def render_agent(slide, data):
-    x = Inches(0.85)
+    y = Inches(2.08)
     for title, body in data["cards"]:
-        add_box(slide, x, Inches(2.10), Inches(3.05), Inches(1.45), RGBColor(255, 255, 255), LINE)
-        text_box(slide, x + Inches(0.20), Inches(2.30), Inches(2.4), Inches(0.30), title, 16, TEAL_DARK, True)
-        text_box(slide, x + Inches(0.20), Inches(2.78), Inches(2.55), Inches(0.48), body, 12, TEXT)
-        x += Inches(3.35)
-    add_picture_fit(slide, screenshot(data["image"]), Inches(4.8), Inches(4.0), Inches(3.8), Inches(2.45))
+        add_box(slide, Inches(0.82), y, Inches(6.55), Inches(1.02), RGBColor(255, 255, 255), LINE)
+        text_box(slide, Inches(1.08), y + Inches(0.17), Inches(1.35), Inches(0.30), title, 15, TEAL_DARK, True)
+        text_box(slide, Inches(2.48), y + Inches(0.17), Inches(4.25), Inches(0.42), body, 11.5, TEXT)
+        y += Inches(1.20)
+    add_box(slide, Inches(0.82), Inches(5.82), Inches(6.55), Inches(0.62), RGBColor(240, 253, 250), RGBColor(94, 234, 212))
+    text_box(slide, Inches(1.08), Inches(5.98), Inches(5.95), Inches(0.24), "课堂汇报口径：这是围绕文章内容的本地阅读 Agent，不做泛聊天。", 12, TEAL_DARK)
+    add_picture_fit(slide, screenshot(data["image"]), Inches(8.75), Inches(1.95), Inches(3.25), Inches(5.15))
 
 
 def render_evidence(slide, data):
@@ -543,6 +576,7 @@ def build_markdown() -> str:
 
 def main() -> None:
     DOCS.mkdir(parents=True, exist_ok=True)
+    make_focus_crops()
     prs = Presentation()
     prs.slide_width = W
     prs.slide_height = H
