@@ -18,12 +18,12 @@ PROJECT = Path(__file__).resolve().parents[1]
 OUT_DIR = PROJECT / "docs" / "手机查看DOCX"
 
 TARGETS = [
-    ("01_期末演示最终作战方案.docx", PROJECT / "docs" / "期末演示最终作战方案.md", "期末演示最终作战方案"),
-    ("02_期末演示PPT逐页内容.docx", PROJECT / "docs" / "期末演示PPT逐页内容.md", "期末演示 PPT 逐页内容"),
-    ("03_期末现场演示讲稿.docx", PROJECT / "docs" / "期末现场演示讲稿.md", "期末现场演示讲稿"),
-    ("04_答辩可能问题.docx", PROJECT / "docs" / "答辩可能问题.md", "答辩可能问题"),
-    ("05_演示当天检查清单.docx", PROJECT / "docs" / "演示当天检查清单.md", "演示当天检查清单"),
-    ("06_期末评分项对应自检表.docx", PROJECT / "docs" / "期末评分项对应自检表.md", "期末评分项对应自检表"),
+    ("01_期末汇报安排.docx", PROJECT / "docs" / "期末汇报安排.md", "期末汇报安排"),
+    ("02_PPT逐页内容.docx", PROJECT / "docs" / "期末演示PPT逐页内容.md", "PPT 逐页内容"),
+    ("03_期末汇报讲稿.docx", PROJECT / "docs" / "期末现场演示讲稿.md", "期末汇报讲稿"),
+    ("04_问答参考.docx", PROJECT / "docs" / "答辩可能问题.md", "问答参考"),
+    ("05_汇报前检查.docx", PROJECT / "docs" / "演示当天检查清单.md", "汇报前检查"),
+    ("06_评分项对照表.docx", PROJECT / "docs" / "期末评分项对应自检表.md", "评分项对照表"),
     ("07_最终提交说明.docx", PROJECT / "docs" / "最终提交说明.md", "最终提交说明"),
     ("08_软件实践3_期末要求对照检查表.docx", PROJECT / "docs" / "软件实践3_期末要求对照检查表.md", "软件实践 3 期末要求对照检查表"),
     ("09_江轩宇手机录屏演示流程.docx", PROJECT / "demo" / "江轩宇手机录屏演示流程.md", "江轩宇手机录屏演示流程"),
@@ -195,18 +195,18 @@ def convert_md_to_docx(source: Path, target: Path, title: str) -> None:
 def build_index() -> None:
     doc = Document()
     configure_doc(doc, "手机查看 DOCX 文件索引")
-    add_para(doc, "这些文件由项目中的 Markdown 材料导出，适合在手机或微信文件里快速查看。建议演示当天优先看 01、02、03、04、05。")
+    add_para(doc, "这些文件由项目中的 Markdown 材料导出，适合在手机或微信文件里快速查看。建议汇报前优先看 01、02、03、04、05。")
     rows = [["序号", "文件", "用途"]]
     purposes = [
-        "总路线、时间表、分工、答辩口径",
-        "PPT 每页讲什么",
-        "现场逐段讲稿",
-        "老师可能问的问题和回答口径",
-        "演示前最后检查",
-        "对照课程评分项自查",
+        "汇报顺序、时间表和分工",
+        "PPT 每页内容",
+        "PPT 逐页讲稿",
+        "常见问题与回答参考",
+        "汇报前材料检查",
+        "课程评分项对照",
         "提交材料范围说明",
         "课程要求对照",
-        "江轩宇手机录屏/真机操作步骤",
+        "江轩宇手机视频操作步骤",
         "APK 安装步骤",
         "APK 文件信息与用途说明",
     ]
